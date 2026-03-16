@@ -1,0 +1,47 @@
+<div style="display:flex;flex-direction:column;gap:2rem;align-items:center;text-align:center;">
+  <!-- Imagem -->
+  <div class="animate-float" style="width:160px;height:160px;border-radius:24px;
+      background:hsl(210,40%,96%);border:2px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:6rem;">
+    {{ palavraAtual.imagem }}
+  </div>
+
+  <!-- Instrução -->
+  <div>
+    <div style="font-size:1.4rem;font-weight:800;margin-bottom:0.4rem;">O que você vê na imagem?</div>
+    <p style="color:var(--muted-fg);font-weight:600;">Clique no microfone e fale o nome</p>
+  </div>
+
+  <!-- Botão mic -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+    @if (!gravando) {
+      <button class="btn btn-primary btn-round" (click)="iniciarGravacao()"
+        [disabled]="processando || feedback !== null"
+        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;
+            box-shadow:0 8px 24px hsl(217 91% 60% / 0.4);">
+        🎤
+      </button>
+    } @else {
+      <button class="btn btn-danger" (click)="pararGravacao()"
+        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;
+            animation:pulse 1s infinite;box-shadow:0 8px 24px hsl(0 84% 60% / 0.4);">
+        ⏹️
+      </button>
+    }
+    @if (processando) {
+      <p style="color:var(--muted-fg);font-size:0.875rem;font-weight:600;
+          animation:pulse 1s infinite;">Analisando sua resposta...</p>
+    }
+  </div>
+
+  <!-- Feedback -->
+  @if (feedback) {
+    <div class="feedback-box animate-pop-in" [class]="feedback.tipo" style="width:100%;text-align:left;">
+      <span style="font-size:1.6rem;">{{ feedback.tipo === 'correto' ? '🎉' : '🔄' }}</span>
+      <div>
+        <div style="font-weight:800;margin-bottom:0.2rem;">{{ feedback.tipo === 'correto' ? 'Muito bem!' : 'Quase lá!' }}</div>
+        <div style="font-size:0.875rem;opacity:0.85;">{{ feedback.mensagem }}</div>
+      </div>
+    </div>
+  }
+</div>

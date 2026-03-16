@@ -1,0 +1,76 @@
+<div class="bg-gradient-hero" style="min-height:100vh;position:relative;">
+
+  <!-- Header -->
+  <header style="background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(255,255,255,0.2);position:sticky;top:0;z-index:10;">
+    <div class="container" style="padding-top:1rem;padding-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+      <button class="btn btn-ghost btn-icon" style="color:white;"
+        (click)="router.navigate(['/dashboard'])">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span style="color:white;font-size:1.3rem;">{{ tituloIcon }}</span>
+        <span style="color:rgba(255,255,255,0.9);font-weight:700;">{{ titulo }}</span>
+      </div>
+      <!-- Points -->
+      <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);
+          border:1px solid rgba(255,255,255,0.3);border-radius:9999px;
+          padding:0.4rem 1rem;color:white;font-weight:800;display:flex;align-items:center;gap:0.4rem;">
+        ⭐ {{ pontos }}
+      </div>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
+
+    <!-- Progress -->
+    <div style="max-width:640px;margin:0 auto 2rem;">
+      <div style="display:flex;justify-content:space-between;font-size:0.85rem;
+          color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:0.6rem;">
+        <span>Progresso</span>
+        <span>{{ indiceAtual + 1 }} de {{ total }}</span>
+      </div>
+      <div style="height:10px;background:rgba(255,255,255,0.25);border-radius:9999px;overflow:hidden;">
+        <div style="height:100%;background:white;border-radius:9999px;transition:width 0.5s ease;box-shadow:0 0 12px rgba(255,255,255,0.5);"
+          [style.width]="progresso + '%'"></div>
+      </div>
+    </div>
+
+    <!-- Game Card -->
+    <div class="card animate-pop-in" style="max-width:640px;margin:0 auto;padding:2.5rem;">
+      @switch (tipoJogo) {
+        @case ('multipla-escolha') {
+          <app-jogo-multipla-escolha
+            [palavras]="palavrasMultipla"
+            [indiceAtual]="indiceAtual"
+            (proximaPalavra)="proximaPalavra()"
+            (finalizar)="finalizarJogo()"
+            (pontos)="adicionarPontos($event)" />
+        }
+        @case ('voz') {
+          <app-jogo-voz
+            [palavras]="palavrasVoz"
+            [indiceAtual]="indiceAtual"
+            (proximaPalavra)="proximaPalavra()"
+            (finalizar)="finalizarJogo()"
+            (pontos)="adicionarPontos($event)" />
+        }
+        @default {
+          <app-jogo-completar
+            [palavras]="palavrasCompletar"
+            [indiceAtual]="indiceAtual"
+            (proximaPalavra)="proximaPalavra()"
+            (finalizar)="finalizarJogo()"
+            (pontos)="adicionarPontos($event)" />
+        }
+      }
+    </div>
+
+    <!-- Dica -->
+    @if (tipoJogo !== 'voz') {
+      <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:0.875rem;margin-top:1.5rem;">
+        💡 {{ tipoJogo === 'multipla-escolha' ? 'Escolha a opção que completa a palavra corretamente' : 'Digite as duas letras que completam a palavra' }}
+      </p>
+    }
+  </div>
+</div>

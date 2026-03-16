@@ -1,0 +1,36 @@
+<div style="display:flex;flex-direction:column;gap:2rem;">
+  <!-- Imagem -->
+  <div style="display:flex;justify-content:center;">
+    <div class="animate-float" style="width:130px;height:130px;border-radius:24px;
+        background:hsl(210,40%,96%);border:2px solid var(--border);
+        display:flex;align-items:center;justify-content:center;font-size:5rem;">
+      {{ palavraAtual.imagem }}
+    </div>
+  </div>
+
+  <!-- Palavra -->
+  <div style="text-align:center;">
+    <div class="font-display" style="font-size:3.5rem;letter-spacing:8px;color:var(--foreground);">
+      {{ palavraAtual.incompleta }}
+    </div>
+    <p style="color:var(--muted-fg);margin-top:0.75rem;font-weight:600;">Escolha a sílaba correta</p>
+  </div>
+
+  <!-- Opções -->
+  <div style="display:flex;flex-direction:column;gap:0.75rem;">
+    @for (opcao of palavraAtual.opcoes; track opcao) {
+      <button class="option-btn" (click)="selecionar(opcao)" [disabled]="feedback !== null"
+        [ngStyle]="getBtnStyle(opcao)">
+        {{ opcao }}
+      </button>
+    }
+  </div>
+
+  <!-- Feedback -->
+  @if (feedback) {
+    <div class="feedback-box animate-pop-in" [class]="feedback">
+      <span style="font-size:1.4rem;">{{ feedback === 'correto' ? '✅' : '❌' }}</span>
+      <span>{{ feedback === 'correto' ? 'Correto! Muito bem!' : 'Tente outra opção' }}</span>
+    </div>
+  }
+</div>
