@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastService } from '../../services/toast';
+import { GameIntegrationService } from '../../services/game-integration.service';
+import { ActivityType } from '../../models/api.models';
 
 @Component({
   selector: 'app-criar-atividade',
@@ -12,26 +14,43 @@ import { ToastService } from '../../services/toast';
   styles: []
 })
 export class CriarAtividadeComponent {
-  router = inject(Router);
-  toast = inject(ToastService);
+  router   = inject(Router);
+  toast    = inject(ToastService);
+  gameSvc  = inject(GameIntegrationService);
 
-  habilidade = '';
-  nivel = '';
-  palavras: string[] = ['bola', 'nome'];
+  habilidade  = '';
+  nivel       = '';
+  palavras: string[] = [];
   novaPalavra = '';
+  salvando    = signal(false);
 
-  habilidades = [
-    { value: 'consciencia-fonologica', label: 'Consciência Fonológica' },
-    { value: 'silabacao', label: 'Silabação' },
-    { value: 'leitura-palavras', label: 'Leitura de Palavras' },
-    { value: 'vocabulario', label: 'Vocabulário' },
+  // Valores alinhados com o enum ActivityType do backend
+  habilidades: { value: ActivityType; label: string }[] = [
+    { value: 'SILABAS',     label: 'Silabação'              },
+    { value: 'FONETICA',    label: 'Consciência Fonológica' },
+    { value: 'LEITURA',     label: 'Leitura de Palavras'    },
+    { value: 'ESCRITA',     label: 'Escrita'                },
+    { value: 'VOCABULARIO', label: 'Vocabulário'            },
   ];
 
-  niveis = [
-    { value: 'iniciante', label: 'Iniciante' },
-    { value: 'intermediario', label: 'Intermediário' },
-    { value: 'avancado', label: 'Avançado' },
+  // Níveis mapeados para dificuldade numérica (1-5) do backend
+  niveis: { value: number; label: string }[] = [
+    { value: 1, label: 'Iniciante'     },
+    { value: 3, label: 'Intermediário' },
+    { value: 5, label: 'Avançado'      },
   ];
+
+  get nivelSelecionado(): number {
+    return Number(this.nivel) || 0;
+  }
+
+  get labelHabilidade(): string {
+    return this.habilidades.find(h => h.value === this.habilidade)?.label ?? '';
+  }
+
+  get labelNivel(): string {
+    return this.niveis.find(n => n.value === this.nivelSelecionado)?.label ?? '';
+  }
 
   adicionarPalavra() {
     const p = this.novaPalavra.trim().toLowerCase();
@@ -47,10 +66,43 @@ export class CriarAtividadeComponent {
 
   salvar() {
     if (!this.habilidade || !this.nivel || this.palavras.length === 0) {
-      this.toast.show({ title: 'Campos obrigatórios', description: 'Preencha todos os campos e adicione palavras.', variant: 'destructive' });
+      this.toast.show({
+        title: 'Campos obrigatórios',
+        description: 'Preencha habilidade, nível e adicione ao menos uma palavra.',
+        variant: 'destructive'
+      });
       return;
     }
-    this.toast.show({ title: 'Atividade criada! 🎉', description: `${this.palavras.length} palavras adicionadas.`, variant: 'success' });
-    setTimeout(() => this.router.navigate(['/dashboard']), 800);
+
+    this.salvando.set(true);
+
+    const nome      = `${this.labelHabilidade} — ${this.labelNivel}`;
+    const descricao = `Palavras: ${this.palavras.join(', ')}`;
+
+    this.gameSvc.createActivity({
+      nome,
+      tipo:       this.habilidade as ActivityType,
+      descricao,
+      dificuldade: this.nivelSelecionado,
+      ativo:       true,
+    }).subscribe({
+      next: atividade => {
+        this.salvando.set(false);
+        this.toast.show({
+          title: '✅ Atividade criada!',
+          description: `"${atividade.nome}" salva com ${this.palavras.length} palavras.`,
+          variant: 'success'
+        });
+        setTimeout(() => this.router.navigate(['/dashboard']), 800);
+      },
+      error: () => {
+        this.salvando.set(false);
+        this.toast.show({
+          title: 'Erro ao salvar',
+          description: 'Não foi possível criar a atividade. Verifique a conexão.',
+          variant: 'destructive'
+        });
+      }
+    });
   }
 }

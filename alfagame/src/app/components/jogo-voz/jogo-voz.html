@@ -1,45 +1,78 @@
-<div style="display:flex;flex-direction:column;gap:2rem;align-items:center;text-align:center;">
+<div style="display:flex;flex-direction:column;gap:1.75rem;align-items:center;text-align:center;">
+
+  <!-- Aviso: browser não suportado -->
+  @if (!suportado) {
+    <div style="background:rgba(244,67,54,0.12);border:1.5px solid #f44336;border-radius:0.75rem;
+        padding:1rem 1.25rem;width:100%;text-align:left;display:flex;gap:0.75rem;align-items:flex-start;">
+      <span style="font-size:1.3rem;flex-shrink:0;">⚠️</span>
+      <div>
+        <div style="font-weight:800;color:#f44336;margin-bottom:0.25rem;">Navegador não suportado</div>
+        <div style="font-size:0.85rem;color:#f44336;opacity:0.9;">
+          O reconhecimento de voz requer <strong>Google Chrome</strong> ou <strong>Safari</strong>.
+          Abra a página nesse navegador para usar este modo.
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Imagem -->
-  <div class="animate-float" style="width:160px;height:160px;border-radius:24px;
-      background:hsl(210,40%,96%);border:2px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:6rem;">
+  <div class="animate-float" style="width:150px;height:150px;border-radius:28px;
+      background:#ffffff;border:none;
+      display:flex;align-items:center;justify-content:center;font-size:6rem;
+      box-shadow:0 8px 40px rgba(255,255,255,0.12),0 2px 8px rgba(0,0,0,0.8);">
     {{ palavraAtual.imagem }}
   </div>
 
   <!-- Instrução -->
   <div>
-    <div style="font-size:1.4rem;font-weight:800;margin-bottom:0.4rem;">O que você vê na imagem?</div>
-    <p style="color:var(--muted-fg);font-weight:600;">Clique no microfone e fale o nome</p>
+    <div style="font-size:1.3rem;font-weight:800;margin-bottom:0.3rem;color:#ffffff;">
+      O que você vê na imagem?
+    </div>
+    <p style="color:#888;font-weight:600;font-size:0.9rem;margin:0;">Clique no microfone e fale o nome</p>
   </div>
 
   <!-- Botão mic -->
-  <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
     @if (!gravando) {
-      <button class="btn btn-primary btn-round" (click)="iniciarGravacao()"
-        [disabled]="processando || feedback !== null"
-        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;
-            box-shadow:0 8px 24px hsl(217 91% 60% / 0.4);">
+      <button (click)="iniciarGravacao()" [disabled]="!suportado || processando || feedback !== null"
+        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;cursor:pointer;
+               background:#ffffff;color:#121212;border:none;
+               box-shadow:0 4px 20px rgba(255,255,255,0.2);transition:all 0.2s;"
+        [style.opacity]="(!suportado || processando || feedback !== null) ? '0.4' : '1'"
+        [style.cursor]="(!suportado || processando || feedback !== null) ? 'not-allowed' : 'pointer'">
         🎤
       </button>
     } @else {
-      <button class="btn btn-danger" (click)="pararGravacao()"
-        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;
-            animation:pulse 1s infinite;box-shadow:0 8px 24px hsl(0 84% 60% / 0.4);">
+      <button (click)="pararGravacao()"
+        style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;cursor:pointer;
+               background:#f44336;color:white;border:none;
+               animation:pulse 1s infinite;box-shadow:0 4px 20px rgba(244,67,54,0.4);">
         ⏹️
       </button>
     }
+
+    @if (gravando) {
+      <p style="color:#4caf50;font-size:0.875rem;font-weight:700;animation:pulse 1s infinite;margin:0;">
+        🎙️ Ouvindo — fale agora!
+      </p>
+    }
     @if (processando) {
-      <p style="color:var(--muted-fg);font-size:0.875rem;font-weight:600;
-          animation:pulse 1s infinite;">Analisando sua resposta...</p>
+      <p style="color:#888;font-size:0.875rem;font-weight:600;animation:pulse 1s infinite;margin:0;">
+        🔍 Analisando sua resposta...
+      </p>
     }
   </div>
 
   <!-- Feedback -->
   @if (feedback) {
-    <div class="feedback-box animate-pop-in" [class]="feedback.tipo" style="width:100%;text-align:left;">
-      <span style="font-size:1.6rem;">{{ feedback.tipo === 'correto' ? '🎉' : '🔄' }}</span>
+    <div class="animate-pop-in" style="display:flex;align-items:center;gap:0.75rem;
+        padding:0.9rem 1.1rem;border-radius:0.75rem;font-weight:700;width:100%;text-align:left;"
+      [style.background]="feedback.tipo === 'correto' ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)'"
+      [style.border]="feedback.tipo === 'correto' ? '1.5px solid #4caf50' : '1.5px solid #f44336'"
+      [style.color]="feedback.tipo === 'correto' ? '#4caf50' : '#f44336'">
+      <span style="font-size:1.4rem;">{{ feedback.tipo === 'correto' ? '🎉' : '🔄' }}</span>
       <div>
-        <div style="font-weight:800;margin-bottom:0.2rem;">{{ feedback.tipo === 'correto' ? 'Muito bem!' : 'Quase lá!' }}</div>
+        <div style="font-weight:800;margin-bottom:0.1rem;">{{ feedback.tipo === 'correto' ? 'Muito bem! 🎉' : 'Foi quase, tenta de novo! 💪' }}</div>
         <div style="font-size:0.875rem;opacity:0.85;">{{ feedback.mensagem }}</div>
       </div>
     </div>

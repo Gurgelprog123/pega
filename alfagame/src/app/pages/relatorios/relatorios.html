@@ -1,101 +1,218 @@
 <div style="min-height:100vh;background:hsl(210,40%,97%);">
-  <header style="background:white;border-bottom:1px solid var(--border);box-shadow:0 2px 12px hsl(222 47% 11% / 0.05);">
+
+  <!-- Header -->
+  <header style="background:white;border-bottom:1px solid #e5e7eb;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <div class="container" style="padding-top:1rem;padding-bottom:1rem;display:flex;align-items:center;gap:1rem;">
-      <button class="btn btn-ghost btn-icon" (click)="router.navigate(['/dashboard'])">
+      <button class="btn btn-ghost btn-icon" style="color:#374151;" (click)="router.navigate(['/dashboard'])">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
-      <div>
-        <div style="font-weight:800;font-size:1.1rem;">Relatórios e Análises</div>
-        <div style="font-size:0.8rem;color:var(--muted-fg);">Acompanhe o desempenho dos alunos</div>
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:1.1rem;color:#111827;">Relatórios e Análises</div>
+        <div style="font-size:0.8rem;color:#6b7280;">
+          @if (alunoSelecionado()) {
+            Aluno: <strong style="color:#111827;">{{ alunoSelecionado()!.nome }}</strong>
+          } @else {
+            Selecione um aluno para ver o desempenho
+          }
+        </div>
       </div>
     </div>
   </header>
 
   <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
 
-    <!-- Stats resumo -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;">
-      <div class="stat-card">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem;">🎯</div>
-        <div class="font-display" style="font-size:2rem;color:hsl(217,91%,55%);">{{ dadosGerais.totalAtividades }}</div>
-        <div style="font-size:0.82rem;font-weight:700;color:var(--muted-fg);">Atividades Realizadas</div>
-        <div style="font-size:0.78rem;color:var(--muted-fg);">Últimos 7 dias</div>
-      </div>
-      <div class="stat-card">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem;">✅</div>
-        <div class="font-display" style="font-size:2rem;color:hsl(142,76%,36%);">{{ dadosGerais.taxaAcerto }}%</div>
-        <div style="font-size:0.82rem;font-weight:700;color:var(--muted-fg);">Taxa de Acerto</div>
-        <div style="font-size:0.78rem;color:hsl(142,76%,36%);font-weight:700;">+{{ dadosGerais.evolucao }}% vs semana anterior</div>
-      </div>
-      <div class="stat-card">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem;">⏱️</div>
-        <div class="font-display" style="font-size:2rem;color:hsl(38,92%,45%);">{{ dadosGerais.tempoMedio }}s</div>
-        <div style="font-size:0.82rem;font-weight:700;color:var(--muted-fg);">Tempo Médio</div>
-        <div style="font-size:0.78rem;color:var(--muted-fg);">Por questão</div>
-      </div>
-      <div class="stat-card">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem;">📈</div>
-        <div class="font-display" style="font-size:2rem;color:hsl(142,76%,36%);">+{{ dadosGerais.evolucao }}%</div>
-        <div style="font-size:0.82rem;font-weight:700;color:var(--muted-fg);">Evolução Geral</div>
-        <div style="font-size:0.78rem;color:var(--muted-fg);">Melhoria acumulada</div>
-      </div>
+    <!-- ── Seletor de aluno ── -->
+    <div class="card" style="padding:1.5rem;margin-bottom:2rem;">
+      <div style="font-weight:700;font-size:0.85rem;color:#374151;text-transform:uppercase;
+          letter-spacing:0.05em;margin-bottom:1rem;">👥 Selecionar Aluno</div>
+
+      @if (loadingStudents()) {
+        <div style="display:flex;gap:0.5rem;align-items:center;color:#6b7280;font-size:0.9rem;">
+          <span class="spinner spinner-sm"></span> Carregando alunos...
+        </div>
+      } @else if (students().length === 0) {
+        <p style="color:#6b7280;font-size:0.9rem;margin:0;">
+          Nenhum aluno cadastrado. <a style="color:hsl(217,91%,55%);font-weight:700;cursor:pointer;"
+            (click)="router.navigate(['/dashboard'])">Cadastre no Dashboard →</a>
+        </p>
+      } @else {
+        <div style="display:flex;flex-wrap:wrap;gap:0.6rem;">
+          @for (s of students(); track s.id) {
+            <button style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 1rem;
+                border-radius:9999px;border:2px solid;cursor:pointer;transition:all 0.15s;
+                font-family:'Nunito',sans-serif;font-size:0.88rem;font-weight:700;"
+              [style.border-color]="alunoSelecionado()?.id === s.id ? 'hsl(217,91%,55%)' : '#e5e7eb'"
+              [style.background]="alunoSelecionado()?.id === s.id ? 'hsl(217 91% 60% / 0.1)' : 'white'"
+              [style.color]="alunoSelecionado()?.id === s.id ? 'hsl(217,91%,45%)' : '#374151'"
+              (click)="selecionarAluno(s)">
+              🧒 {{ s.nome }}
+              @if (alunoSelecionado()?.id === s.id) { <span>✓</span> }
+            </button>
+          }
+        </div>
+      }
     </div>
 
-    <!-- Desempenho por habilidade -->
-    <div class="card" style="padding:2rem;">
-      <div style="margin-bottom:1.75rem;">
-        <h2 style="font-weight:800;font-size:1.2rem;margin:0 0 0.3rem;">Desempenho por Habilidade</h2>
-        <p style="font-size:0.875rem;color:var(--muted-fg);margin:0;">Análise detalhada de acertos, tempo médio e evolução</p>
+    <!-- ── Sem aluno selecionado ── -->
+    @if (!alunoSelecionado()) {
+      <div class="card" style="padding:3rem;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">📊</div>
+        <div style="font-weight:700;font-size:1rem;color:#374151;margin-bottom:0.4rem;">
+          Nenhum aluno selecionado
+        </div>
+        <div style="font-size:0.875rem;color:#6b7280;">
+          Clique em um aluno acima para ver o relatório de desempenho.
+        </div>
       </div>
+    }
 
-      <div style="display:flex;flex-direction:column;gap:0;">
-        @for (habilidade of habilidades; track habilidade.nome; let last = $last) {
-          <div style="padding:1.5rem 0;" [style.border-bottom]="!last ? '1px solid var(--border)' : 'none'">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
-              <div>
-                <div style="font-weight:800;font-size:1rem;">{{ habilidade.nome }}</div>
-                <div style="font-size:0.82rem;color:var(--muted-fg);margin-top:0.2rem;">
-                  {{ habilidade.acertos }} acertos em {{ habilidade.tentativas }} tentativas
+    <!-- ── Conteúdo do aluno selecionado ── -->
+    @if (alunoSelecionado()) {
+
+      <!-- Loading -->
+      @if (loadingResults()) {
+        <div style="display:flex;justify-content:center;padding:3rem;">
+          <div class="spinner"></div>
+        </div>
+      } @else {
+
+        <!-- Stats resumo -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem;">
+          <div class="stat-card">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">🎯</div>
+            <div class="font-display" style="font-size:2rem;color:hsl(217,91%,55%);">
+              {{ dadosGerais().totalAtividades }}
+            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:#6b7280;">Sessões Realizadas</div>
+          </div>
+          <div class="stat-card">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">✅</div>
+            <div class="font-display" style="font-size:2rem;"
+              [style.color]="getBarColor(dadosGerais().taxaAcerto)">
+              {{ dadosGerais().taxaAcerto }}%
+            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:#6b7280;">Taxa de Acerto</div>
+          </div>
+          <div class="stat-card">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">⏱️</div>
+            <div class="font-display" style="font-size:2rem;color:hsl(38,92%,45%);">
+              {{ dadosGerais().tempoMedio }}s
+            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:#6b7280;">Tempo Médio</div>
+          </div>
+          <div class="stat-card">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem;">⭐</div>
+            <div class="font-display" style="font-size:2rem;color:hsl(38,92%,45%);">
+              {{ alunoSelecionado()!.scoreTotal }}
+            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:#6b7280;">Score Total</div>
+          </div>
+        </div>
+
+        <!-- Nenhum resultado ainda -->
+        @if (resultados().length === 0) {
+          <div class="card" style="padding:3rem;text-align:center;margin-bottom:2rem;">
+            <div style="font-size:3rem;margin-bottom:1rem;">🎮</div>
+            <div style="font-weight:700;font-size:1rem;color:#374151;margin-bottom:0.4rem;">
+              Sem atividades registradas ainda
+            </div>
+            <div style="font-size:0.875rem;color:#6b7280;margin-bottom:1.5rem;">
+              {{ alunoSelecionado()!.nome }} ainda não realizou nenhuma atividade.
+            </div>
+            <button class="btn btn-primary" (click)="router.navigate(['/dashboard'])">
+              Iniciar Atividade →
+            </button>
+          </div>
+        } @else {
+
+          <!-- Histórico de sessões -->
+          <div class="card" style="padding:2rem;margin-bottom:2rem;">
+            <h2 style="font-weight:800;font-size:1.2rem;margin:0 0 1.25rem;color:#111827;">
+              📋 Histórico de Sessões
+            </h2>
+            <div style="display:flex;flex-direction:column;gap:0;">
+              @for (r of resultados().slice().reverse().slice(0, 10); track r.id; let last = $last) {
+                <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:0.9rem 0;flex-wrap:wrap;gap:0.5rem;"
+                  [style.border-bottom]="!last ? '1px solid #f3f4f6' : 'none'">
+                  <div>
+                    <div style="font-weight:700;font-size:0.95rem;color:#111827;">{{ r.activityNome }}</div>
+                    <div style="font-size:0.78rem;color:#6b7280;">
+                      {{ r.timestamp | date:'dd/MM/yyyy HH:mm' }}
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                    <span style="font-size:0.82rem;font-weight:700;color:hsl(142,76%,35%);">
+                      ✅ {{ r.acertos }} acertos
+                    </span>
+                    <span style="font-size:0.82rem;font-weight:700;color:hsl(0,84%,55%);">
+                      ❌ {{ r.erros }} erros
+                    </span>
+                    <span style="font-size:0.78rem;color:#6b7280;">
+                      ⏱️ {{ (r.tempoMs / 1000).toFixed(0) }}s
+                    </span>
+                    <span style="font-size:0.78rem;font-weight:700;"
+                      [style.color]="getBarColor(r.acertos + r.erros > 0 ? (r.acertos/(r.acertos+r.erros))*100 : 0)">
+                      {{ r.acertos + r.erros > 0 ? ((r.acertos / (r.acertos + r.erros)) * 100).toFixed(0) : 0 }}%
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <span class="badge" [ngStyle]="{'background': habilidade.evolucao > 10 ? 'hsl(142 76% 36% / 0.12)' : 'hsl(214,32%,91%)',
-                'color': habilidade.evolucao > 10 ? 'hsl(142,76%,30%)' : 'var(--muted-fg)'}">
-                {{ habilidade.evolucao > 0 ? '+' : '' }}{{ habilidade.evolucao }}%
-              </span>
+              }
             </div>
+          </div>
 
-            <div style="margin-bottom:0.75rem;">
-              <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:0.4rem;">
-                <span style="color:var(--muted-fg);">Taxa de Acerto</span>
-                <span style="font-weight:800;" [style.color]="getBarColor(habilidade.taxaAcerto)">{{ habilidade.taxaAcerto }}%</span>
-              </div>
-              <div class="progress-track">
-                <div style="height:100%;border-radius:9999px;transition:width 0.6s ease;"
-                  [style.width]="habilidade.taxaAcerto + '%'"
-                  [style.background]="getBarColor(habilidade.taxaAcerto)"></div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted-fg);">
-                ⏱️ Tempo médio: <strong style="color:var(--foreground);">{{ habilidade.tempoMedio }}s</strong>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;">
-                @if (habilidade.evolucao > 0) {
-                  <span style="color:hsl(142,76%,36%);">📈 Evolução: <strong>+{{ habilidade.evolucao }}%</strong></span>
-                } @else {
-                  <span style="color:hsl(0,84%,60%);">📉 Evolução: <strong>{{ habilidade.evolucao }}%</strong></span>
+          <!-- Desempenho por atividade -->
+          @if (habilidades().length > 0) {
+            <div class="card" style="padding:2rem;margin-bottom:2rem;">
+              <h2 style="font-weight:800;font-size:1.2rem;margin:0 0 1.25rem;color:#111827;">
+                📈 Desempenho por Tipo de Atividade
+              </h2>
+              <div style="display:flex;flex-direction:column;gap:0;">
+                @for (h of habilidades(); track h.nome; let last = $last) {
+                  <div style="padding:1.25rem 0;"
+                    [style.border-bottom]="!last ? '1px solid #f3f4f6' : 'none'">
+                    <div style="display:flex;align-items:center;justify-content:space-between;
+                        margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+                      <div>
+                        <div style="font-weight:800;font-size:1rem;color:#111827;">{{ h.nome }}</div>
+                        <div style="font-size:0.82rem;color:#6b7280;margin-top:0.15rem;">
+                          {{ h.acertos }} acertos em {{ h.tentativas }} tentativas · ⏱️ {{ h.tempoMedio }}s médio
+                        </div>
+                      </div>
+                      <span style="font-size:1.1rem;font-weight:900;"
+                        [style.color]="getBarColor(h.taxaAcerto)">
+                        {{ h.taxaAcerto }}%
+                      </span>
+                    </div>
+                    <div class="progress-track">
+                      <div style="height:100%;border-radius:9999px;transition:width 0.6s ease;"
+                        [style.width]="h.taxaAcerto + '%'"
+                        [style.background]="getBarColor(h.taxaAcerto)">
+                      </div>
+                    </div>
+                  </div>
                 }
               </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+
+        } <!-- /resultados.length > 0 -->
+
+      } <!-- /loadingResults -->
+
+    } <!-- /alunoSelecionado -->
+
+    <!-- Botões de navegação -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-lg" (click)="router.navigate(['/dashboard'])">
+        ← Voltar ao Dashboard
+      </button>
+      @if (alunoSelecionado()) {
+        <button class="btn btn-primary btn-lg" (click)="router.navigate(['/dashboard'])">
+          🎮 Nova Atividade
+        </button>
+      }
     </div>
 
-    <div style="display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;">
-      <button class="btn btn-outline btn-lg" (click)="router.navigate(['/dashboard'])">← Voltar ao Dashboard</button>
-      <button class="btn btn-primary btn-lg" (click)="router.navigate(['/jogo'])">Iniciar Nova Atividade</button>
-    </div>
   </div>
 </div>

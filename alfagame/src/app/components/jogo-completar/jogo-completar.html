@@ -1,19 +1,21 @@
-<div style="display:flex;flex-direction:column;gap:2rem;">
+<div style="display:flex;flex-direction:column;gap:1.75rem;">
+
   <!-- Imagem -->
   <div style="display:flex;justify-content:center;">
     <div class="animate-float" style="width:130px;height:130px;border-radius:24px;
-        background:hsl(210,40%,96%);border:2px solid var(--border);
-        display:flex;align-items:center;justify-content:center;font-size:5rem;">
+        background:#ffffff;border:none;
+        display:flex;align-items:center;justify-content:center;font-size:5rem;
+        box-shadow:0 8px 40px rgba(255,255,255,0.12),0 2px 8px rgba(0,0,0,0.8);">
       {{ palavraAtual.imagem }}
     </div>
   </div>
 
   <!-- Palavra -->
   <div style="text-align:center;">
-    <div class="font-display" style="font-size:3.5rem;letter-spacing:8px;color:var(--foreground);">
+    <div class="font-display" style="font-size:3.2rem;letter-spacing:8px;color:#ffffff;font-weight:900;">
       {{ palavraAtual.incompleta }}
     </div>
-    <p style="color:var(--muted-fg);margin-top:0.75rem;font-weight:600;">Complete a palavra</p>
+    <p style="color:#888;margin-top:0.5rem;font-weight:600;font-size:0.9rem;">Complete a palavra</p>
   </div>
 
   <!-- Input -->
@@ -28,21 +30,26 @@
       placeholder="??"
       autofocus
       style="text-align:center;font-family:'Fredoka One',cursive;font-size:2.5rem;font-weight:900;
-        padding:1rem;border-radius:var(--radius);border:3px solid;outline:none;
-        width:100%;letter-spacing:8px;transition:all 0.2s;"
-      [style.border-color]="feedback === 'correto' ? 'hsl(142,76%,36%)' : feedback === 'incorreto' ? 'hsl(0,84%,60%)' : 'var(--border)'"
-      [style.background]="feedback === 'correto' ? 'hsl(142 76% 36% / 0.08)' : feedback === 'incorreto' ? 'hsl(0 84% 60% / 0.08)' : 'white'"
-      [style.color]="feedback === 'correto' ? 'hsl(142,76%,36%)' : feedback === 'incorreto' ? 'hsl(0,84%,60%)' : 'var(--foreground)'"
+        padding:1rem 1rem 1rem;border-radius:0.75rem;letter-spacing:8px;outline:none;width:100%;
+        transition:all 0.2s;border:2px solid;box-shadow:0 2px 20px rgba(0,0,0,0.5);"
+      [style.background]="feedback === 'correto' ? 'rgba(76,175,80,0.15)' : feedback === 'incorreto' ? 'rgba(244,67,54,0.15)' : 'rgba(255,255,255,0.06)'"
+      [style.border-color]="feedback === 'correto' ? '#4caf50' : feedback === 'incorreto' ? '#f44336' : 'rgba(255,255,255,0.12)'"
+      [style.color]="feedback === 'correto' ? '#4caf50' : feedback === 'incorreto' ? '#f44336' : '#ffffff'"
     />
 
     @if (feedback) {
-      <div class="feedback-box animate-pop-in" [class]="feedback">
-        <span style="font-size:1.4rem;">{{ feedback === 'correto' ? '✅' : '❌' }}</span>
-        <span>{{ feedback === 'correto' ? 'Correto! Excelente!' : 'Tente novamente' }}</span>
+      <div class="animate-pop-in" style="display:flex;align-items:center;gap:0.75rem;
+          padding:0.9rem 1.1rem;border-radius:0.75rem;font-weight:700;"
+        [style.background]="feedback === 'correto' ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)'"
+        [style.border]="feedback === 'correto' ? '1.5px solid #4caf50' : '1.5px solid #f44336'"
+        [style.color]="feedback === 'correto' ? '#4caf50' : '#f44336'">
+        <span style="font-size:1.3rem;">{{ feedback === 'correto' ? '✅' : '❌' }}</span>
+        <span>{{ feedback === 'correto' ? 'Correto! Excelente! 🎉' : 'Foi quase, tenta de novo! 💪' }}</span>
       </div>
     }
 
-    <button class="btn btn-primary btn-lg" (click)="verificar()" [disabled]="!resposta || feedback !== null">
+    <button class="btn btn-primary btn-lg" (click)="verificar()" [disabled]="!resposta || feedback !== null"
+      style="border-radius:0.75rem;">
       Verificar Resposta
     </button>
   </div>

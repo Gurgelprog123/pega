@@ -1,52 +1,108 @@
-<div class="bg-gradient-hero hero-bg">
-  <!-- Decorative blobs -->
-  <div class="blob" style="width:400px;height:400px;background:hsl(38,92%,50%);top:-100px;right:-100px;"></div>
-  <div class="blob" style="width:300px;height:300px;background:hsl(280,60%,60%);bottom:-50px;left:-80px;"></div>
+<div class="login-bg">
 
   <div style="width:100%;max-width:440px;position:relative;z-index:1;">
     <!-- Logo -->
     <div style="text-align:center;margin-bottom:2rem;" class="animate-slide-up">
       <div class="animate-float" style="display:inline-flex;align-items:center;justify-content:center;
-           width:80px;height:80px;border-radius:24px;
-           background:white;box-shadow:0 12px 40px rgba(0,0,0,0.15);margin-bottom:1.25rem;">
+            width:80px;height:80px;border-radius:24px;
+            background:#ffffff;border:1px solid #e0e0e0;box-shadow:0 12px 40px rgba(0,0,0,0.5);margin-bottom:1.25rem;">
         <span style="font-size:2.5rem;">🎓</span>
       </div>
-      <h1 class="font-display" style="color:white;font-size:2.8rem;margin:0;letter-spacing:1px;
-          text-shadow:0 2px 12px rgba(0,0,0,0.15);">AlfaGame</h1>
-      <p style="color:rgba(255,255,255,0.85);margin-top:0.5rem;font-size:1rem;font-weight:600;">
+      <h1 class="font-display" style="color:#f0f0f0;font-size:2.8rem;margin:0;letter-spacing:1px;">PEGA</h1>
+      <p style="color:#999;margin-top:0.5rem;font-size:1rem;font-weight:600;">
         Plataforma de Alfabetização Gamificada
       </p>
     </div>
 
     <!-- Card -->
-    <div class="card animate-slide-up" style="padding:2rem;animation-delay:0.1s;">
-      <h2 style="font-size:1.35rem;font-weight:800;margin:0 0 0.35rem;">Bem-vindo de volta 👋</h2>
-      <p style="color:var(--muted-fg);font-size:0.9rem;margin:0 0 1.75rem;">Entre com suas credenciais para acessar</p>
+    <div class="card animate-slide-up" style="padding:2rem;animation-delay:0.1s;background:#1e1e1e;border-color:#333;color:#f0f0f0;">
 
-      <div style="display:flex;flex-direction:column;gap:1.1rem;">
-        <div>
-          <label class="label">E-mail</label>
-          <input class="input" type="email" placeholder="professor@escola.com"
-            [(ngModel)]="email" (keydown.enter)="handleLogin()" />
+      @if (!isRegister()) {
+        <!-- ── LOGIN ── -->
+        <h2 style="font-size:1.35rem;font-weight:800;margin:0 0 0.35rem;">Bem-vindo de volta 👋</h2>
+        <p style="color:var(--muted-fg);font-size:0.9rem;margin:0 0 1.75rem;">Entre com suas credenciais para acessar</p>
+
+        <div style="display:flex;flex-direction:column;gap:1.1rem;">
+          <div>
+            <label class="label" style="color:#d1d5db;">E-mail</label>
+            <input class="input" type="email" placeholder="professor@escola.com"
+              [(ngModel)]="email" (keydown.enter)="handleLogin()" />
+          </div>
+          <div>
+            <label class="label" style="color:#d1d5db;">Senha</label>
+            <input class="input" type="password" placeholder="••••••••"
+              [(ngModel)]="password" (keydown.enter)="handleLogin()" />
+          </div>
+          <button class="btn btn-primary btn-lg" style="width:100%;margin-top:0.5rem;"
+            (click)="handleLogin()" [disabled]="loading()">
+            @if (loading()) {
+              <span style="display:inline-flex;gap:4px;align-items:center;">
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0s infinite;"></span>
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.2s infinite;"></span>
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.4s infinite;"></span>
+              </span>
+            } @else {
+              Entrar →
+            }
+          </button>
         </div>
-        <div>
-          <label class="label">Senha</label>
-          <input class="input" type="password" placeholder="••••••••"
-            [(ngModel)]="password" (keydown.enter)="handleLogin()" />
+
+        <p style="text-align:center;margin-top:1.25rem;font-size:0.88rem;color:var(--muted-fg);">
+          Não tem uma conta?
+          <button style="background:none;border:none;cursor:pointer;color:var(--primary);font-weight:700;padding:0;"
+            (click)="toggleMode()">Cadastrar-se</button>
+        </p>
+
+      } @else {
+        <!-- ── REGISTER ── -->
+        <h2 style="font-size:1.35rem;font-weight:800;margin:0 0 0.35rem;">Criar conta 🚀</h2>
+        <p style="color:var(--muted-fg);font-size:0.9rem;margin:0 0 1.75rem;">Preencha os dados para começar</p>
+
+        <div style="display:flex;flex-direction:column;gap:1.1rem;">
+          <div>
+            <label class="label" style="color:#d1d5db;">Nome completo</label>
+            <input class="input" type="text" placeholder="Prof. Maria Silva"
+              [(ngModel)]="nome" />
+          </div>
+          <div>
+            <label class="label" style="color:#d1d5db;">E-mail</label>
+            <input class="input" type="email" placeholder="professor@escola.com"
+              [(ngModel)]="regEmail" />
+          </div>
+          <div>
+            <label class="label" style="color:#d1d5db;">Senha</label>
+            <input class="input" type="password" placeholder="Mínimo 6 caracteres"
+              [(ngModel)]="regPass" />
+          </div>
+          <div>
+            <label class="label" style="color:#d1d5db;">Perfil</label>
+            <select class="input" [(ngModel)]="role" style="cursor:pointer;">
+              @for (opt of roleOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <button class="btn btn-primary btn-lg" style="width:100%;margin-top:0.5rem;"
+            (click)="handleRegister()" [disabled]="loading()">
+            @if (loading()) {
+              <span style="display:inline-flex;gap:4px;align-items:center;">
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0s infinite;"></span>
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.2s infinite;"></span>
+                <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.4s infinite;"></span>
+              </span>
+            } @else {
+              Criar conta →
+            }
+          </button>
         </div>
-        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:0.5rem;"
-          (click)="handleLogin()" [disabled]="loading">
-          @if (loading) {
-            <span style="display:inline-flex;gap:4px;align-items:center;">
-              <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0s infinite;"></span>
-              <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.2s infinite;"></span>
-              <span style="width:6px;height:6px;background:white;border-radius:50%;animation:pulse 0.8s 0.4s infinite;"></span>
-            </span>
-          } @else {
-            Entrar →
-          }
-        </button>
-      </div>
+
+        <p style="text-align:center;margin-top:1.25rem;font-size:0.88rem;color:var(--muted-fg);">
+          Já tem uma conta?
+          <button style="background:none;border:none;cursor:pointer;color:var(--primary);font-weight:700;padding:0;"
+            (click)="toggleMode()">Entrar</button>
+        </p>
+      }
+
     </div>
 
     <p style="text-align:center;color:rgba(255,255,255,0.6);font-size:0.82rem;margin-top:1.5rem;">

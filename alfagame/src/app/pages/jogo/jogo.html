@@ -1,76 +1,86 @@
-<div class="bg-gradient-hero" style="min-height:100vh;position:relative;">
+<div class="jogo-container">
 
   <!-- Header -->
-  <header style="background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);
-      border-bottom:1px solid rgba(255,255,255,0.2);position:sticky;top:0;z-index:10;">
-    <div class="container" style="padding-top:1rem;padding-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
-      <button class="btn btn-ghost btn-icon" style="color:white;"
-        (click)="router.navigate(['/dashboard'])">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
-      <div style="display:flex;align-items:center;gap:1rem;">
-        <span style="color:white;font-size:1.3rem;">{{ tituloIcon }}</span>
-        <span style="color:rgba(255,255,255,0.9);font-weight:700;">{{ titulo }}</span>
-      </div>
-      <!-- Points -->
-      <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);
-          border:1px solid rgba(255,255,255,0.3);border-radius:9999px;
-          padding:0.4rem 1rem;color:white;font-weight:800;display:flex;align-items:center;gap:0.4rem;">
-        ⭐ {{ pontos }}
-      </div>
+  <div class="jogo-header">
+    <button class="btn-voltar" (click)="voltar()">← Voltar</button>
+    <span class="jogo-titulo">{{ titulo }}</span>
+    <span class="jogo-pontos">⭐ {{ pontos }}</span>
+  </div>
+
+  <!-- Barra de progresso -->
+  <div class="progresso-wrapper">
+    <div class="progresso-info">
+      <span>Questão {{ indiceAtual + 1 }} de {{ total }}</span>
+      <span>{{ progresso.toFixed(0) }}%</span>
     </div>
-  </header>
-
-  <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
-
-    <!-- Progress -->
-    <div style="max-width:640px;margin:0 auto 2rem;">
-      <div style="display:flex;justify-content:space-between;font-size:0.85rem;
-          color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:0.6rem;">
-        <span>Progresso</span>
-        <span>{{ indiceAtual + 1 }} de {{ total }}</span>
-      </div>
-      <div style="height:10px;background:rgba(255,255,255,0.25);border-radius:9999px;overflow:hidden;">
-        <div style="height:100%;background:white;border-radius:9999px;transition:width 0.5s ease;box-shadow:0 0 12px rgba(255,255,255,0.5);"
-          [style.width]="progresso + '%'"></div>
-      </div>
+    <div class="progresso-barra">
+      <div class="progresso-fill" [style.width]="progresso + '%'"></div>
     </div>
+  </div>
 
-    <!-- Game Card -->
-    <div class="card animate-pop-in" style="max-width:640px;margin:0 auto;padding:2.5rem;">
-      @switch (tipoJogo) {
-        @case ('multipla-escolha') {
-          <app-jogo-multipla-escolha
-            [palavras]="palavrasMultipla"
-            [indiceAtual]="indiceAtual"
-            (proximaPalavra)="proximaPalavra()"
-            (finalizar)="finalizarJogo()"
-            (pontos)="adicionarPontos($event)" />
-        }
-        @case ('voz') {
-          <app-jogo-voz
-            [palavras]="palavrasVoz"
-            [indiceAtual]="indiceAtual"
-            (proximaPalavra)="proximaPalavra()"
-            (finalizar)="finalizarJogo()"
-            (pontos)="adicionarPontos($event)" />
-        }
-        @default {
-          <app-jogo-completar
-            [palavras]="palavrasCompletar"
-            [indiceAtual]="indiceAtual"
-            (proximaPalavra)="proximaPalavra()"
-            (finalizar)="finalizarJogo()"
-            (pontos)="adicionarPontos($event)" />
-        }
+  <!-- Card do jogo -->
+  <div class="jogo-card">
+    @switch (tipoAtividade) {
+      @case ('multipla-escolha') {
+        <app-jogo-multipla-escolha
+          [palavras]="palavrasMultipla"
+          [indiceAtual]="indiceAtual"
+          (proximaPalavra)="proximaPalavra()"
+          (finalizar)="finalizarJogo()"
+          (pontos)="adicionarPontos($event)" />
       }
-    </div>
-
-    <!-- Dica -->
-    @if (tipoJogo !== 'voz') {
-      <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:0.875rem;margin-top:1.5rem;">
-        💡 {{ tipoJogo === 'multipla-escolha' ? 'Escolha a opção que completa a palavra corretamente' : 'Digite as duas letras que completam a palavra' }}
-      </p>
+      @case ('completar') {
+        <app-jogo-completar
+          [palavras]="palavrasCompletar"
+          [indiceAtual]="indiceAtual"
+          (proximaPalavra)="proximaPalavra()"
+          (finalizar)="finalizarJogo()"
+          (pontos)="adicionarPontos($event)" />
+      }
+      @case ('voz') {
+        <app-jogo-voz
+          [palavras]="palavrasVoz"
+          [indiceAtual]="indiceAtual"
+          (proximaPalavra)="proximaPalavra()"
+          (finalizar)="finalizarJogo()"
+          (pontos)="adicionarPontos($event)" />
+      }
+      @default {
+        <p style="text-align:center;color:#999;padding:3rem;">Tipo de atividade não encontrado</p>
+      }
     }
   </div>
+
 </div>
+
+<!-- Overlay de resultado -->
+@if (mostrarResultado()) {
+  <div class="resultado-overlay">
+    <div class="resultado-card">
+      @if (enviandoResultado()) {
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;">
+          <div class="spinner"></div>
+          <p style="color:#999;margin:0;">Salvando resultado…</p>
+        </div>
+      } @else if (resultadoJADE()) {
+        @let res = resultadoJADE()!;
+        <div style="font-size:3rem;margin-bottom:0.5rem;">
+          {{ res.feedbackTipo === 'POSITIVO' ? '🎉' : res.feedbackTipo === 'ENCORAJAMENTO' ? '💪' : '😊' }}
+        </div>
+        <h2 style="font-size:1.4rem;font-weight:800;margin:0 0 0.4rem;color:#f0f0f0;">Atividade Concluída!</h2>
+        <p style="color:#999;margin:0 0 1.5rem;font-size:0.9rem;">{{ res.feedback }}</p>
+        <div style="display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <span style="background:rgba(76,175,80,0.15);border:1.5px solid #4caf50;border-radius:9999px;padding:0.35rem 0.9rem;font-weight:700;color:#4caf50;font-size:0.88rem;">✅ {{ res.acertos }} acertos</span>
+          <span style="background:rgba(244,67,54,0.15);border:1.5px solid #f44336;border-radius:9999px;padding:0.35rem 0.9rem;font-weight:700;color:#f44336;font-size:0.88rem;">❌ {{ res.erros }} erros</span>
+          <span style="background:rgba(255,255,255,0.1);border:1.5px solid #555;border-radius:9999px;padding:0.35rem 0.9rem;font-weight:700;color:#f0f0f0;font-size:0.88rem;">⭐ {{ res.novoScore }} pts</span>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;" (click)="fecharResultado()">Ver Relatório →</button>
+      } @else {
+        <div style="font-size:3rem;margin-bottom:0.5rem;">🎉</div>
+        <h2 style="font-size:1.4rem;font-weight:800;margin:0 0 0.4rem;color:#f0f0f0;">Concluído!</h2>
+        <p style="color:#999;margin:0 0 1.5rem;">Você fez <strong style="color:#f0f0f0;">{{ pontos }}</strong> pontos!</p>
+        <button class="btn btn-primary btn-lg" style="width:100%;" (click)="fecharResultado()">Voltar →</button>
+      }
+    </div>
+  </div>
+}

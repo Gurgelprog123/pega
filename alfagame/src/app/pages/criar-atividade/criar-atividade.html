@@ -1,12 +1,12 @@
 <div style="min-height:100vh;background:hsl(210,40%,97%);">
   <!-- Header -->
-  <header style="background:white;border-bottom:1px solid var(--border);box-shadow:0 2px 12px hsl(222 47% 11% / 0.05);">
+  <header style="background:white;border-bottom:1px solid #e5e7eb;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <div class="container" style="padding-top:1rem;padding-bottom:1rem;display:flex;align-items:center;gap:1rem;">
-      <button class="btn btn-ghost btn-icon" (click)="router.navigate(['/dashboard'])">
+      <button class="btn btn-ghost btn-icon" style="color:#374151;" (click)="router.navigate(['/dashboard'])">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
       <div>
-        <div style="font-weight:800;font-size:1.1rem;">Nova Atividade</div>
+        <div style="font-weight:800;font-size:1.1rem;color:#111827;">Nova Atividade</div>
         <div style="font-size:0.8rem;color:var(--muted-fg);">Crie uma atividade de completação silábica</div>
       </div>
     </div>
@@ -23,7 +23,7 @@
         <!-- Habilidade -->
         <div>
           <label class="label">Habilidade a ser trabalhada</label>
-          <select class="select" [(ngModel)]="habilidade">
+          <select class="select-light" [(ngModel)]="habilidade">
             <option value="" disabled>Selecione a habilidade</option>
             @for (h of habilidades; track h.value) {
               <option [value]="h.value">{{ h.label }}</option>
@@ -34,13 +34,14 @@
         <!-- Nível -->
         <div>
           <label class="label">Nível de Dificuldade</label>
-          <select class="select" [(ngModel)]="nivel">
+          <select class="select-light" [(ngModel)]="nivel">
             <option value="" disabled>Selecione o nível</option>
             @for (n of niveis; track n.value) {
               <option [value]="n.value">{{ n.label }}</option>
             }
           </select>
         </div>
+
 
         <!-- Palavras -->
         <div>
@@ -67,7 +68,7 @@
 
           <!-- Input nova palavra -->
           <div style="display:flex;gap:0.75rem;">
-            <input class="input" placeholder="Digite uma palavra" [(ngModel)]="novaPalavra"
+            <input class="input-light" placeholder="Digite uma palavra" [(ngModel)]="novaPalavra"
               (keydown.enter)="adicionarPalavra()" style="flex:1;" />
             <button class="btn btn-primary" (click)="adicionarPalavra()" [disabled]="!novaPalavra.trim()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -78,7 +79,7 @@
 
         <!-- Preview -->
         @if (palavras.length > 0) {
-          <div style="background:hsl(210,40%,97%);border:1.5px dashed var(--border);border-radius:var(--radius);padding:1.25rem;">
+          <div style="background:hsl(210,40%,97%);border:1.5px dashed #d1d5db;border-radius:var(--radius);padding:1.25rem;">
             <div style="font-weight:800;font-size:0.9rem;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.4rem;">
               👁️ Preview da Atividade
             </div>
@@ -95,10 +96,15 @@
 
         <!-- Botões -->
         <div style="display:flex;gap:1rem;padding-top:0.5rem;">
-          <button class="btn btn-outline btn-lg" style="flex:1;" (click)="router.navigate(['/dashboard'])">Cancelar</button>
-          <button class="btn btn-primary btn-lg" style="flex:1;" (click)="salvar()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Salvar Atividade
+          <button class="btn btn-outline btn-lg" style="flex:1;" (click)="router.navigate(['/dashboard'])" [disabled]="salvando()">Cancelar</button>
+          <button class="btn btn-primary btn-lg" style="flex:1;" (click)="salvar()" [disabled]="salvando()">
+            @if (salvando()) {
+              <span class="spinner spinner-sm"></span>
+              Salvando...
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salvar Atividade
+            }
           </button>
         </div>
       </div>

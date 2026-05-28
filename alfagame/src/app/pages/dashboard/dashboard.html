@@ -1,8 +1,8 @@
 <div style="min-height:100vh;background:hsl(210,40%,97%);">
 
   <!-- Header -->
-  <header style="background:white;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;
-      box-shadow:0 2px 12px hsl(222 47% 11% / 0.05);">
+  <header style="background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10;
+      box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <div class="container" style="padding-top:1rem;padding-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:0.85rem;">
         <div style="width:44px;height:44px;border-radius:14px;
@@ -10,7 +10,7 @@
             display:flex;align-items:center;justify-content:center;font-size:1.3rem;">📚</div>
         <div>
           <div class="font-display" style="font-size:1.3rem;color:hsl(217,91%,50%);">AlfaGame</div>
-          <div style="font-size:0.78rem;color:var(--muted-fg);font-weight:600;">Prof. João Silva</div>
+          <div style="font-size:0.78rem;color:#6b7280;font-weight:600;">{{ nomeUsuario }}</div>
         </div>
       </div>
       <button class="btn btn-ghost btn-icon" (click)="logout()" title="Sair">
@@ -28,24 +28,30 @@
           <span style="font-size:0.8rem;font-weight:700;color:var(--muted-fg);text-transform:uppercase;letter-spacing:0.05em;">Alunos</span>
           <span style="font-size:1.5rem;">👥</span>
         </div>
-        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(217,91%,55%);">33</div>
-        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Em 3 grupos ativos</div>
+        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(217,91%,55%);">
+          @if (loadingStudents()) { <span class="spinner spinner-sm" style="display:inline-block;"></span> }
+          @else { {{ students().length }} }
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Cadastrados</div>
       </div>
       <div class="stat-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
           <span style="font-size:0.8rem;font-weight:700;color:var(--muted-fg);text-transform:uppercase;letter-spacing:0.05em;">Atividades</span>
           <span style="font-size:1.5rem;">📋</span>
         </div>
-        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(142,76%,36%);">25</div>
-        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Últimos 30 dias</div>
+        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(142,76%,36%);">3</div>
+        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Tipos disponíveis</div>
       </div>
       <div class="stat-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-          <span style="font-size:0.8rem;font-weight:700;color:var(--muted-fg);text-transform:uppercase;letter-spacing:0.05em;">Progresso</span>
-          <span style="font-size:1.5rem;">📈</span>
+          <span style="font-size:0.8rem;font-weight:700;color:var(--muted-fg);text-transform:uppercase;letter-spacing:0.05em;">Pontuação</span>
+          <span style="font-size:1.5rem;">⭐</span>
         </div>
-        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(38,92%,50%);">75%</div>
-        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Média geral das turmas</div>
+        <div style="font-size:2.2rem;font-weight:800;font-family:'Fredoka One',cursive;color:hsl(38,92%,50%);">
+          @if (loadingStudents()) { <span class="spinner spinner-sm" style="display:inline-block;"></span> }
+          @else { {{ totalScore() }} }
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted-fg);margin-top:0.2rem;">Pts acumulados</div>
       </div>
     </div>
 
@@ -62,7 +68,7 @@
     </div>
 
     <!-- Atividades Disponíveis -->
-    <h2 class="font-display" style="font-size:1.6rem;margin:0 0 1.25rem;color:var(--foreground);">🎮 Atividades Disponíveis</h2>
+    <h2 class="font-display" style="font-size:1.6rem;margin:0 0 1.25rem;color:#111827;">🎮 Atividades Disponíveis</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;margin-bottom:3rem;">
       @for (ativ of atividades; track ativ.tipo) {
         <div class="card" style="padding:1.5rem;cursor:pointer;transition:all 0.25s;border:2px solid transparent;"
@@ -72,9 +78,7 @@
           [attr.data-color]="ativ.cor">
           <div style="width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;
               font-size:1.6rem;margin-bottom:1rem;"
-            [style.background]="ativ.cor + '18'">
-            {{ ativ.icon }}
-          </div>
+            [style.background]="ativ.cor + '18'">{{ ativ.icon }}</div>
           <div style="font-weight:800;font-size:1.05rem;margin-bottom:0.35rem;">{{ ativ.titulo }}</div>
           <div style="font-size:0.85rem;color:var(--muted-fg);">{{ ativ.descricao }}</div>
           <div style="margin-top:1rem;font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:0.35rem;"
@@ -86,39 +90,299 @@
       }
     </div>
 
-    <!-- Turmas -->
-    <h2 class="font-display" style="font-size:1.6rem;margin:0 0 1.25rem;color:var(--foreground);">🏫 Minhas Turmas e Grupos</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;">
-      @for (grupo of grupos; track grupo.id) {
-        <div class="card" style="padding:1.5rem;transition:all 0.2s;"
-          onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'"
-          onmouseleave="this.style.transform='';this.style.boxShadow=''">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;">
-            <div>
-              <div style="font-weight:800;font-size:1rem;">{{ grupo.nome }}</div>
-              <div style="font-size:0.82rem;color:var(--muted-fg);margin-top:0.2rem;">{{ grupo.atividades }} atividades disponíveis</div>
-            </div>
-            <span class="badge badge-primary">{{ grupo.alunos }} alunos</span>
-          </div>
-          <div style="margin-bottom:1.1rem;">
-            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:0.4rem;">
-              <span style="color:var(--muted-fg);">Progresso médio</span>
-              <span style="font-weight:800;" [style.color]="grupo.progresso >= 75 ? 'hsl(142,76%,35%)' : 'hsl(38,92%,45%)'">
-                {{ grupo.progresso }}%
-              </span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" [style.width]="grupo.progresso + '%'"></div>
-            </div>
-          </div>
-          <div style="display:flex;gap:0.6rem;">
-            <button class="btn btn-outline btn-sm" style="flex:1;">Ver Detalhes</button>
-            <a [routerLink]="['/relatorios']" [queryParams]="{grupo: grupo.id}" class="btn btn-ghost btn-sm" style="text-decoration:none;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            </a>
-          </div>
-        </div>
-      }
+    <!-- Aviso de sync -->
+    @if (syncError()) {
+      <div style="background:#fff7ed;border:1.5px solid #f97316;border-radius:0.5rem;
+          padding:0.75rem 1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.6rem;
+          font-size:0.85rem;font-weight:600;color:#c2410c;">
+        ⚠️ Sem conexão com o servidor — exibindo dados salvos localmente.
+        <button style="margin-left:auto;background:none;border:none;cursor:pointer;
+            color:#c2410c;font-weight:700;font-size:0.85rem;" (click)="syncStudents()">
+          Tentar novamente
+        </button>
+      </div>
+    }
+
+    <!-- ── Meus Alunos ── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;">
+      <h2 class="font-display" style="font-size:1.6rem;margin:0;color:#111827;">👥 Meus Alunos</h2>
+      <button class="btn btn-primary" (click)="mostrarFormAluno.update(v => !v)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Aluno
+      </button>
     </div>
+
+    <!-- Form adicionar aluno -->
+    @if (mostrarFormAluno()) {
+      <div class="card" style="padding:1.25rem;margin-bottom:1.25rem;border:2px solid hsl(217,91%,55%);">
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.75rem;color:#111827;">➕ Cadastrar novo aluno</div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+          <input class="input-light" placeholder="Nome completo do aluno"
+            [(ngModel)]="novoNome" (keydown.enter)="criarAluno()"
+            style="flex:1;min-width:200px;" />
+          <button class="btn btn-primary" (click)="criarAluno()" [disabled]="criando() || !novoNome.trim()">
+            @if (criando()) { <span class="spinner spinner-sm"></span> }
+            @else { Cadastrar }
+          </button>
+          <button class="btn btn-outline" (click)="mostrarFormAluno.set(false);novoNome=''">Cancelar</button>
+        </div>
+      </div>
+    }
+
+    <!-- Lista de alunos -->
+    @if (loadingStudents()) {
+      <div style="display:flex;justify-content:center;padding:3rem;">
+        <div class="spinner"></div>
+      </div>
+    } @else if (students().length === 0) {
+      <div class="card" style="padding:3rem;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">👶</div>
+        <div style="font-weight:700;font-size:1rem;color:#374151;margin-bottom:0.4rem;">Nenhum aluno cadastrado</div>
+        <div style="font-size:0.875rem;color:#6b7280;margin-bottom:1.5rem;">
+          Cadastre seus alunos para acompanhar o progresso de cada um.
+        </div>
+        <button class="btn btn-primary" (click)="mostrarFormAluno.set(true)">
+          Cadastrar primeiro aluno
+        </button>
+      </div>
+    } @else {
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        @for (aluno of students(); track aluno.id) {
+          <div class="card" style="padding:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <!-- Avatar -->
+            <div style="width:48px;height:48px;border-radius:50%;
+                background:hsl(217 91% 60% / 0.12);
+                display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">
+              🧒
+            </div>
+
+            <!-- Info -->
+            <div style="flex:1;min-width:140px;">
+              <div style="font-weight:800;font-size:1rem;color:#111827;">{{ aluno.nome }}</div>
+              <div style="display:flex;gap:1rem;margin-top:0.3rem;flex-wrap:wrap;">
+                <span style="font-size:0.78rem;font-weight:600;color:hsl(217,91%,50%);">
+                  Nível {{ aluno.nivelAtual }}
+                </span>
+                <span style="font-size:0.78rem;font-weight:600;color:hsl(38,92%,45%);">
+                  ⭐ {{ aluno.scoreTotal }} pts
+                </span>
+              </div>
+            </div>
+
+            <!-- Nível barra -->
+            <div style="flex:1;min-width:120px;max-width:180px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#6b7280;margin-bottom:0.3rem;">
+                <span>Progresso nível {{ aluno.nivelAtual }}</span>
+                <span>{{ (aluno.scoreTotal % 100) }}%</span>
+              </div>
+              <div class="progress-track" style="height:6px;">
+                <div class="progress-fill" [style.width]="(aluno.scoreTotal % 100) + '%'"
+                  style="background:hsl(217,91%,55%);"></div>
+              </div>
+            </div>
+
+            <!-- Ações -->
+            <div style="display:flex;gap:0.4rem;flex-shrink:0;align-items:center;flex-wrap:wrap;">
+              <button title="Completar Sílabas"
+                style="display:inline-flex;align-items:center;justify-content:center;gap:0.35rem;
+                       padding:0.4rem 0.75rem;border:none;border-radius:0.5rem;cursor:pointer;
+                       font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;
+                       background:hsl(217,91%,55%);color:white;transition:all 0.15s;white-space:nowrap;"
+                (click)="iniciarJogoDireto(aluno, 'completar')"
+                onmouseenter="this.style.background='hsl(217,91%,48%)'"
+                onmouseleave="this.style.background='hsl(217,91%,55%)'">
+                ✏️ Completar
+              </button>
+              <button title="Escolher Sílaba"
+                style="display:inline-flex;align-items:center;justify-content:center;gap:0.35rem;
+                       padding:0.4rem 0.75rem;border:none;border-radius:0.5rem;cursor:pointer;
+                       font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;
+                       background:hsl(142,76%,36%);color:white;transition:all 0.15s;white-space:nowrap;"
+                (click)="iniciarJogoDireto(aluno, 'multipla-escolha')"
+                onmouseenter="this.style.background='hsl(142,76%,28%)'"
+                onmouseleave="this.style.background='hsl(142,76%,36%)'">
+                🎯 Escolher
+              </button>
+              <button title="Falar a Palavra"
+                style="display:inline-flex;align-items:center;justify-content:center;gap:0.35rem;
+                       padding:0.4rem 0.75rem;border:none;border-radius:0.5rem;cursor:pointer;
+                       font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;
+                       background:hsl(38,92%,50%);color:white;transition:all 0.15s;white-space:nowrap;"
+                (click)="iniciarJogoDireto(aluno, 'voz')"
+                onmouseenter="this.style.background='hsl(38,92%,42%)'"
+                onmouseleave="this.style.background='hsl(38,92%,50%)'">
+                🎤 Voz
+              </button>
+              <button class="btn btn-outline btn-sm" (click)="irParaRelatorio(aluno)" title="Ver Relatório">
+                📊
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>
+
+<!-- ── Modal: selecionar aluno + tipo de atividade ── -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="showModal.set(false)">
+    <div (click)="$event.stopPropagation()"
+      style="background:white;border-radius:1.25rem;width:100%;max-width:560px;
+             max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.18);
+             animation:slide-up 0.25s cubic-bezier(0.4,0,0.2,1) both;">
+
+      <!-- ── Header ── -->
+      <div style="padding:1.5rem 1.5rem 0;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">
+        <div>
+          <h2 style="font-weight:900;font-size:1.35rem;margin:0;color:#111827;letter-spacing:-0.02em;">
+            Iniciar Atividade
+          </h2>
+          <p style="font-size:0.875rem;color:#6b7280;margin:0.25rem 0 0;">
+            Escolha a atividade e o aluno para começar
+          </p>
+        </div>
+        <button (click)="showModal.set(false)"
+          style="background:#f3f4f6;border:none;cursor:pointer;border-radius:9999px;
+                 width:32px;height:32px;font-size:1rem;color:#6b7280;
+                 display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                 transition:background 0.15s;"
+          onmouseenter="this.style.background='#e5e7eb'" onmouseleave="this.style.background='#f3f4f6'">
+          ✕
+        </button>
+      </div>
+
+      <div style="padding:1.25rem 1.5rem 1.5rem;">
+
+        <!-- ── Tipo de atividade: grid 3 colunas ── -->
+        <div style="margin-bottom:1.5rem;">
+          <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+              color:#9ca3af;margin:0 0 0.75rem;">① Tipo de atividade</p>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.6rem;">
+            @for (ativ of atividades; track ativ.tipo) {
+              <button (click)="tipoJogoSelecionado.set(ativ.tipo)"
+                style="display:flex;flex-direction:column;align-items:center;gap:0.6rem;
+                       padding:1rem 0.5rem;border-radius:0.875rem;border:2px solid;
+                       cursor:pointer;text-align:center;transition:all 0.18s;
+                       font-family:'Nunito',sans-serif;position:relative;"
+                [style.border-color]="tipoJogoSelecionado() === ativ.tipo ? ativ.cor : '#e5e7eb'"
+                [style.background]="tipoJogoSelecionado() === ativ.tipo ? ativ.cor + '14' : '#fafafa'"
+                [style.box-shadow]="tipoJogoSelecionado() === ativ.tipo ? '0 0 0 3px ' + ativ.cor + '30' : 'none'">
+
+                <!-- Ícone colorido -->
+                <div style="width:48px;height:48px;border-radius:14px;
+                    display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+                    transition:transform 0.18s;"
+                  [style.background]="ativ.cor + '20'">
+                  {{ ativ.icon }}
+                </div>
+
+                <div style="font-weight:800;font-size:0.8rem;line-height:1.2;color:#111827;">
+                  {{ ativ.titulo }}
+                </div>
+
+                <!-- Check badge -->
+                @if (tipoJogoSelecionado() === ativ.tipo) {
+                  <div style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+                      border-radius:50%;display:flex;align-items:center;justify-content:center;
+                      font-size:0.65rem;color:white;font-weight:900;border:2px solid white;"
+                    [style.background]="ativ.cor">
+                    ✓
+                  </div>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- ── Separador ── -->
+        <div style="height:1px;background:#f3f4f6;margin-bottom:1.25rem;"></div>
+
+        <!-- ── Selecionar aluno ── -->
+        <div style="margin-bottom:1.25rem;">
+          <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+              color:#9ca3af;margin:0 0 0.75rem;">② Selecionar aluno</p>
+
+          @if (loadingStudents()) {
+            <div style="display:flex;justify-content:center;padding:1.5rem;">
+              <div class="spinner"></div>
+            </div>
+          } @else if (students().length === 0) {
+            <div style="text-align:center;padding:1.5rem;background:#f9fafb;border-radius:0.75rem;
+                border:1.5px dashed #e5e7eb;">
+              <div style="font-size:1.75rem;margin-bottom:0.5rem;">👶</div>
+              <div style="font-size:0.875rem;color:#6b7280;font-weight:600;">
+                Nenhum aluno cadastrado.<br>
+                <span style="color:hsl(217,91%,55%);cursor:pointer;font-weight:700;"
+                  (click)="showModal.set(false);mostrarFormAluno.set(true)">
+                  Cadastre um na tela principal →
+                </span>
+              </div>
+            </div>
+          } @else {
+            <div style="display:flex;flex-direction:column;gap:0.5rem;max-height:200px;overflow-y:auto;">
+              @for (s of students(); track s.id) {
+                <button (click)="selectedStudent.set(s)"
+                  style="display:flex;align-items:center;gap:0.875rem;padding:0.875rem 1rem;
+                         border-radius:0.75rem;border:2px solid;cursor:pointer;
+                         text-align:left;transition:all 0.15s;background:white;
+                         font-family:'Nunito',sans-serif;width:100%;"
+                  [style.border-color]="selectedStudent()?.id === s.id ? 'hsl(217,91%,55%)' : '#e5e7eb'"
+                  [style.background]="selectedStudent()?.id === s.id ? 'hsl(217 91% 55% / 0.07)' : 'white'">
+
+                  <!-- Avatar -->
+                  <div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;
+                      display:flex;align-items:center;justify-content:center;font-size:1.2rem;"
+                    [style.background]="selectedStudent()?.id === s.id ? 'hsl(217 91% 55% / 0.15)' : '#f3f4f6'">
+                    🧒
+                  </div>
+
+                  <!-- Info -->
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-weight:800;font-size:0.95rem;color:#111827;
+                        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      {{ s.nome }}
+                    </div>
+                    <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.1rem;">
+                      Nível {{ s.nivelAtual }} &nbsp;·&nbsp; ⭐ {{ s.scoreTotal }} pts
+                    </div>
+                  </div>
+
+                  <!-- Radio visual -->
+                  <div style="width:20px;height:20px;border-radius:50%;border:2px solid;
+                      flex-shrink:0;display:flex;align-items:center;justify-content:center;
+                      transition:all 0.15s;"
+                    [style.border-color]="selectedStudent()?.id === s.id ? 'hsl(217,91%,55%)' : '#d1d5db'"
+                    [style.background]="selectedStudent()?.id === s.id ? 'hsl(217,91%,55%)' : 'white'">
+                    @if (selectedStudent()?.id === s.id) {
+                      <div style="width:8px;height:8px;border-radius:50%;background:white;"></div>
+                    }
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- ── Botão confirmar ── -->
+        <button (click)="confirmarJogo()" [disabled]="!selectedStudent()"
+          style="width:100%;padding:1rem;border-radius:0.875rem;border:none;cursor:pointer;
+                 font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;
+                 transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.6rem;"
+          [style.background]="selectedStudent() ? 'hsl(217,91%,55%)' : '#e5e7eb'"
+          [style.color]="selectedStudent() ? 'white' : '#9ca3af'"
+          [style.cursor]="selectedStudent() ? 'pointer' : 'not-allowed'"
+          [style.box-shadow]="selectedStudent() ? '0 4px 16px hsl(217 91% 55% / 0.35)' : 'none'">
+          <span style="font-size:1.1rem;">🎮</span>
+          @if (selectedStudent()) {
+            Jogar com {{ selectedStudent()!.nome }}
+          } @else {
+            Selecione um aluno para continuar
+          }
+        </button>
+
+      </div>
+    </div>
+  </div>
+}

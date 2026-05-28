@@ -1,5 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 
+export interface ToastOptions {
+  title: string;
+  description: string;
+  variant?: 'success' | 'destructive' | 'default';
+  duration?: number;
+  position?: 'top' | 'bottom';
+}
+
 export interface Toast {
   id: number;
   title: string;
