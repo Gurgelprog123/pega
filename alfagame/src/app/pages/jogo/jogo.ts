@@ -294,19 +294,25 @@ export class JogoComponent implements OnInit {
     });
   }
 
-  /** Carrega as palavras da atividade cadastrada no banco que bate com o tipo do jogo */
-  private carregarPalavrasDeAtividade(atividades: ActivityDto[]) {
-    const tipoBackend = this.TIPO_PARA_ACTIVITY[this.tipoJogo];
-    // Pega a primeira atividade ativa do tipo correto (dificuldade mais alta = mais recente)
-    const atividade = atividades
-      .filter(a => a.tipo === tipoBackend && a.ativo)
-      .sort((a, b) => b.dificuldade - a.dificuldade)[0];
+  // Atividade carregada — usada por todos os 3 modos de jogo
+  private atividadeAtual: ActivityDto | null = null;
 
-    if (!atividade) return; // nenhuma atividade criada → mantém padrão
+  /**
+   * Carrega a atividade mais recente do banco (independente do tipo).
+   * Os 3 modos de jogo (Completar, Escolher, Voz) usam as mesmas palavras.
+   */
+  private carregarPalavrasDeAtividade(atividades: ActivityDto[]) {
+    // Atividade mais recente = maior ID
+    const atividade = atividades
+      .filter(a => a.ativo)
+      .sort((a, b) => b.id - a.id)[0];
+
+    if (!atividade) return; // nenhuma atividade criada → mantém palavras padrão
 
     const nomes = parsePalavrasAtividade(atividade.descricao);
     if (nomes.length < 2) return; // atividade vazia → mantém padrão
 
+    this.atividadeAtual = atividade;
     const completar = nomes.map(palavraParaCompletar);
     this.palavrasCompletar.set(completar);
     this.palavrasVoz.set(completar.map(p => ({
@@ -316,14 +322,9 @@ export class JogoComponent implements OnInit {
     })));
   }
 
-  /** Resolve o ID da atividade no banco a partir do tipo do jogo atual. */
+  /** Retorna o ID da atividade que foi carregada para este jogo. */
   private resolverActivityId(): number {
-    const tipoBackend = this.TIPO_PARA_ACTIVITY[this.tipoJogo];
-    if (tipoBackend && this.atividades.length > 0) {
-      const match = this.atividades.find(a => a.tipo === tipoBackend);
-      if (match) return match.id;
-    }
-    return 1; // fallback seguro
+    return this.atividadeAtual?.id ?? (this.atividades[0]?.id ?? 1);
   }
 
   voltar() {
