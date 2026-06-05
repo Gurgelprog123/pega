@@ -30,7 +30,6 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   audio     = inject(AudioService);
   rewardSvc = inject(RewardService);
   toast     = inject(ToastService);
-  // NgZone necessário porque SpeechRecognition roda fora da zona Angular
   private ngZone = inject(NgZone);
 
   gravando    = false;
@@ -58,7 +57,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       this.feedback    = null;
       this.gravando    = false;
       this.processando = false;
-      this.limparRecognition();
+      this.pararTudo();
     }
   }
 
@@ -66,12 +65,10 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
     this.sessaoId++;
     this.gravacoes.forEach(g => URL.revokeObjectURL(g.url));
     this.gravacoes = [];
-    this.limparRecognition();
-    this.pararMediaRecorderInterno();
-    this.micStream?.getTracks().forEach(t => t.stop());
+    this.pararTudo();
   }
 
-  async iniciarGravacao() {
+  iniciarGravacao() {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       this.toast.show({ title: 'Navegador não suportado', description: 'Use Chrome ou Safari.', variant: 'destructive' });
@@ -81,48 +78,20 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
     const minhaSessao = ++this.sessaoId;
     this.gravando    = true;
     this.feedback    = null;
-    this.tempoInicioPalavraMs = Date.now();
     this.audioChunks = [];
+    this.tempoInicioPalavraMs = Date.now();
 
-    // ── MediaRecorder (gravação para playback) ──────────────────────────
-    try {
-      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.mediaRecorder = new MediaRecorder(this.micStream);
-      this.mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this.audioChunks.push(e.data);
-      };
-      this.mediaRecorder.onstop = () => {
-        if (minhaSessao !== this.sessaoId) return;
-        if (this.audioChunks.length > 0) {
-          const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-          const url  = URL.createObjectURL(blob);
-          const nome = this.palavras[this.indiceAtual]?.completa ?? '';
-          const idx  = this.gravacoes.findIndex(g => g.palavra === nome && g.acertou === null);
-          if (idx !== -1) this.gravacoes[idx].url = url;
-          else            this.gravacoes.push({ palavra: nome, url, acertou: null });
-        }
-        this.micStream?.getTracks().forEach(t => t.stop());
-        this.micStream = null;
-      };
-      this.mediaRecorder.start();
-    } catch {
-      // sem permissão de mic — só o reconhecimento continua
-    }
-
-    // ── SpeechRecognition ───────────────────────────────────────────────
-    this.limparRecognition();
+    // ── 1. SpeechRecognition inicia PRIMEIRO (não bloqueia) ──────────────
+    this.pararRecognition();
     this.recognition = new SR();
     this.recognition.lang            = 'pt-BR';
     this.recognition.interimResults  = false;
     this.recognition.maxAlternatives = 5;
     this.recognition.continuous      = false;
 
-    // IMPORTANTE: SpeechRecognition roda fora da zona Angular.
-    // Tudo que muda estado ou emite eventos precisa estar dentro de ngZone.run().
+    // SpeechRecognition roda fora da zona Angular → ngZone.run() obrigatório
     this.recognition.onresult = (event: any) => {
       if (minhaSessao !== this.sessaoId) return;
-
-      this.pararMediaRecorderInterno();
 
       const alternativas: string[] = [];
       for (let i = 0; i < event.results[0].length; i++) {
@@ -132,7 +101,8 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       const acertou = alternativas.some(t => t === alvo || t.includes(alvo));
       const tempoMs = Date.now() - this.tempoInicioPalavraMs;
 
-      // Entra na zona Angular para que mudanças de estado sejam detectadas
+      this.pararMediaRecorder();
+
       this.ngZone.run(() => {
         if (minhaSessao !== this.sessaoId) return;
         this.gravando    = false;
@@ -140,13 +110,13 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
         setTimeout(() => {
           if (minhaSessao !== this.sessaoId) return;
           this.processarResultado(acertou, alternativas[0] ?? '', tempoMs);
-        }, 300);
+        }, 400);
       });
     };
 
     this.recognition.onerror = (event: any) => {
       if (minhaSessao !== this.sessaoId) return;
-      this.pararMediaRecorderInterno();
+      this.pararMediaRecorder();
       const msgs: Record<string, string> = {
         'no-speech':           '🔇 Nenhuma fala detectada. Fale mais alto.',
         'not-allowed':         '🎙️ Microfone bloqueado. Permita nas configurações.',
@@ -156,13 +126,17 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       this.ngZone.run(() => {
         this.gravando    = false;
         this.processando = false;
-        this.toast.show({ title: 'Erro ao reconhecer', description: msgs[event.error] ?? 'Tente novamente.', variant: 'destructive' });
+        this.toast.show({
+          title: 'Erro ao reconhecer',
+          description: msgs[event.error] ?? 'Tente novamente.',
+          variant: 'destructive'
+        });
       });
     };
 
     this.recognition.onend = () => {
       if (minhaSessao !== this.sessaoId) return;
-      this.pararMediaRecorderInterno();
+      this.pararMediaRecorder();
       this.ngZone.run(() => {
         if (this.gravando) this.gravando = false;
       });
@@ -170,17 +144,58 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
 
     this.recognition.start();
     this.toast.show({ title: '🎙️ Ouvindo...', description: `Fale: "${this.palavraAtual.completa}"` });
+
+    // ── 2. MediaRecorder inicia em paralelo (não bloqueia o recognition) ─
+    this.iniciarMediaRecorderAsync(minhaSessao);
+  }
+
+  /** Tenta gravar o áudio de forma assíncrona e independente do recognition */
+  private iniciarMediaRecorderAsync(minhaSessao: number) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        if (minhaSessao !== this.sessaoId) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        this.micStream    = stream;
+        this.mediaRecorder = new MediaRecorder(stream);
+        this.mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) this.audioChunks.push(e.data);
+        };
+        this.mediaRecorder.onstop = () => {
+          if (minhaSessao !== this.sessaoId) return;
+          if (this.audioChunks.length > 0) {
+            const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+            const url  = URL.createObjectURL(blob);
+            const nome = this.palavras[this.indiceAtual]?.completa ?? '';
+            const idx  = this.gravacoes.findIndex(g => g.palavra === nome && g.acertou === null);
+            this.ngZone.run(() => {
+              if (idx !== -1) this.gravacoes[idx].url = url;
+              else            this.gravacoes.push({ palavra: nome, url, acertou: null });
+            });
+          }
+          this.micStream?.getTracks().forEach(t => t.stop());
+          this.micStream = null;
+        };
+        this.mediaRecorder.start();
+      })
+      .catch(() => { /* sem permissão — recognition continua normalmente */ });
   }
 
   pararGravacao() {
-    if (this.recognition) {
-      try { this.recognition.stop(); } catch {}
-    }
-    this.gravando = false;
-    this.pararMediaRecorderInterno();
+    this.pararRecognition();
+    this.pararMediaRecorder();
+    this.ngZone.run(() => { this.gravando = false; });
   }
 
-  private limparRecognition() {
+  private pararTudo() {
+    this.pararRecognition();
+    this.pararMediaRecorder();
+    this.micStream?.getTracks().forEach(t => t.stop());
+    this.micStream = null;
+  }
+
+  private pararRecognition() {
     if (this.recognition) {
       this.recognition.onresult = null;
       this.recognition.onerror  = null;
@@ -190,7 +205,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
     }
   }
 
-  private pararMediaRecorderInterno() {
+  private pararMediaRecorder() {
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       try { this.mediaRecorder.stop(); } catch {}
     }
@@ -201,6 +216,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
 
     const palavraAtualCompleta = this.palavraAtual.completa;
 
+    // Marca resultado na gravação correspondente
     const idx = this.gravacoes.findIndex(g => g.palavra === palavraAtualCompleta && g.acertou === null);
     if (idx !== -1) this.gravacoes[idx].acertou = acertou;
 
@@ -216,7 +232,6 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
           ? `Você disse "${transcricao}" — perfeito! 🎉`
           : `"${palavraAtualCompleta}" — correto! 🎉`
       };
-      // Avança para a próxima palavra após 1.8s
       setTimeout(() => {
         this.feedback = null;
         if (this.indiceAtual < this.palavras.length - 1) {
