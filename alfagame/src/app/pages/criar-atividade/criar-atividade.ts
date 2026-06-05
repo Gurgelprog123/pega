@@ -77,7 +77,8 @@ export class CriarAtividadeComponent {
     this.salvando.set(true);
 
     const nome      = `${this.labelHabilidade} — ${this.labelNivel}`;
-    const descricao = `Palavras: ${this.palavras.join(', ')}`;
+    // Palavras salvas como JSON para o jogo conseguir carregar dinamicamente
+    const descricao = JSON.stringify({ palavras: this.palavras });
 
     this.gameSvc.createActivity({
       nome,

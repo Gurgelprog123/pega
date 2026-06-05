@@ -40,6 +40,10 @@ export class GameIntegrationService {
     return this.http.post<ActivityDto>(`${this.base}/activities`, dto);
   }
 
+  deleteActivity(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/activities/${id}`);
+  }
+
   // ── Game ──────────────────────────────────────────────────────────────────
 
   playGame(req: PlayGameRequest): Observable<PlayGameResponse> {

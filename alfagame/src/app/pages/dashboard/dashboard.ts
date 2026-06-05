@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { GameIntegrationService } from '../../services/game-integration.service';
 import { RewardService } from '../../services/reward.service';
 import { ToastService } from '../../services/toast';
-import { StudentDto } from '../../models/api.models';
+import { ActivityDto, StudentDto } from '../../models/api.models';
 
 const STUDENTS_CACHE_KEY = 'pega_students_cache';
 
@@ -32,11 +32,15 @@ export class DashboardComponent implements OnInit {
 
   totalScore = computed(() => this.students().reduce((acc, s) => acc + s.scoreTotal, 0));
 
+  // Atividades
+  atividades_lista  = signal<ActivityDto[]>([]);
+  excluindoAtivId   = signal<number | null>(null);
+
   // Form de aluno
   novoNome         = '';
   criando          = signal(false);
   mostrarFormAluno = signal(false);
-  excluindoId      = signal<number | null>(null); // ID do aluno sendo excluído
+  excluindoId      = signal<number | null>(null);
 
   atividades = [
     { tipo: 'completar',        icon: '✏️', titulo: 'Completar Sílabas',  descricao: 'Digite as letras que completam a palavra',  cor: 'hsl(217,91%,60%)' },
@@ -46,6 +50,14 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.syncStudents();
+    this.carregarAtividades();
+  }
+
+  carregarAtividades() {
+    this.gameSvc.getActivities().subscribe({
+      next: list => this.atividades_lista.set(list),
+      error: () => {}
+    });
   }
 
   syncStudents() {
@@ -121,6 +133,31 @@ export class DashboardComponent implements OnInit {
         this.toast.show({ title: 'Erro ao cadastrar', description: 'Não foi possível salvar o aluno.', variant: 'destructive' });
       }
     });
+  }
+
+  excluirAtividade(ativ: ActivityDto) {
+    if (!confirm(`Excluir a atividade "${ativ.nome}"?`)) return;
+    this.excluindoAtivId.set(ativ.id);
+    this.gameSvc.deleteActivity(ativ.id).subscribe({
+      next: () => {
+        this.atividades_lista.set(this.atividades_lista().filter(a => a.id !== ativ.id));
+        this.excluindoAtivId.set(null);
+        this.toast.show({ title: '🗑️ Atividade removida', description: `"${ativ.nome}" foi excluída.`, variant: 'success' });
+      },
+      error: () => {
+        this.excluindoAtivId.set(null);
+        this.toast.show({ title: 'Erro ao excluir', description: 'Não foi possível remover a atividade.', variant: 'destructive' });
+      }
+    });
+  }
+
+  labelPalavras(ativ: ActivityDto): string {
+    try {
+      const obj = JSON.parse(ativ.descricao ?? '{}');
+      if (Array.isArray(obj.palavras)) return obj.palavras.join(', ');
+    } catch {}
+    const match = (ativ.descricao ?? '').match(/Palavras?:\s*(.+)/i);
+    return match ? match[1] : '—';
   }
 
   excluirAluno(aluno: StudentDto) {

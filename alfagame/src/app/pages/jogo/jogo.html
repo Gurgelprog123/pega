@@ -23,7 +23,7 @@
     @switch (tipoAtividade) {
       @case ('multipla-escolha') {
         <app-jogo-multipla-escolha
-          [palavras]="palavrasMultipla"
+          [palavras]="palavrasMultipla()"
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
@@ -32,7 +32,7 @@
       }
       @case ('completar') {
         <app-jogo-completar
-          [palavras]="palavrasCompletar"
+          [palavras]="palavrasCompletar()"
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
@@ -41,7 +41,7 @@
       }
       @case ('voz') {
         <app-jogo-voz
-          [palavras]="palavrasVoz"
+          [palavras]="palavrasVoz()"
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
