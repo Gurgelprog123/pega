@@ -226,6 +226,16 @@
               <button class="btn btn-outline btn-sm" (click)="irParaRelatorio(aluno)" title="Ver Relatório">
                 📊
               </button>
+              <button title="Excluir aluno"
+                [disabled]="excluindoId() === aluno.id"
+                (click)="excluirAluno(aluno)"
+                style="display:inline-flex;align-items:center;justify-content:center;
+                       padding:0.4rem 0.6rem;border:1.5px solid #fca5a5;border-radius:0.5rem;
+                       cursor:pointer;background:white;color:#ef4444;transition:all 0.15s;font-size:0.9rem;"
+                onmouseenter="this.style.background='#fef2f2'" onmouseleave="this.style.background='white'">
+                @if (excluindoId() === aluno.id) { <span class="spinner spinner-sm"></span> }
+                @else { 🗑️ }
+              </button>
             </div>
           </div>
         }

@@ -27,7 +27,8 @@
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
-          (pontos)="adicionarPontos($event)" />
+          (pontos)="adicionarPontos($event)"
+          (palavraResultado)="onPalavraResultado($event)" />
       }
       @case ('completar') {
         <app-jogo-completar
@@ -35,7 +36,8 @@
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
-          (pontos)="adicionarPontos($event)" />
+          (pontos)="adicionarPontos($event)"
+          (palavraResultado)="onPalavraResultado($event)" />
       }
       @case ('voz') {
         <app-jogo-voz
@@ -43,7 +45,8 @@
           [indiceAtual]="indiceAtual"
           (proximaPalavra)="proximaPalavra()"
           (finalizar)="finalizarJogo()"
-          (pontos)="adicionarPontos($event)" />
+          (pontos)="adicionarPontos($event)"
+          (palavraResultado)="onPalavraResultado($event)" />
       }
       @default {
         <p style="text-align:center;color:#999;padding:3rem;">Tipo de atividade não encontrado</p>

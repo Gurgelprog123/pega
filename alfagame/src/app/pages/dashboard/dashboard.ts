@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   novoNome         = '';
   criando          = signal(false);
   mostrarFormAluno = signal(false);
+  excluindoId      = signal<number | null>(null); // ID do aluno sendo excluído
 
   atividades = [
     { tipo: 'completar',        icon: '✏️', titulo: 'Completar Sílabas',  descricao: 'Digite as letras que completam a palavra',  cor: 'hsl(217,91%,60%)' },
@@ -118,6 +119,24 @@ export class DashboardComponent implements OnInit {
       error: () => {
         this.criando.set(false);
         this.toast.show({ title: 'Erro ao cadastrar', description: 'Não foi possível salvar o aluno.', variant: 'destructive' });
+      }
+    });
+  }
+
+  excluirAluno(aluno: StudentDto) {
+    if (!confirm(`Excluir "${aluno.nome}"? Todos os resultados serão perdidos.`)) return;
+    this.excluindoId.set(aluno.id);
+    this.gameSvc.deleteStudent(aluno.id).subscribe({
+      next: () => {
+        const updated = this.students().filter(s => s.id !== aluno.id);
+        this.students.set(updated);
+        this.saveStudentsCache(updated);
+        this.excluindoId.set(null);
+        this.toast.show({ title: '🗑️ Aluno removido', description: `${aluno.nome} foi excluído.`, variant: 'success' });
+      },
+      error: () => {
+        this.excluindoId.set(null);
+        this.toast.show({ title: 'Erro ao excluir', description: 'Não foi possível remover o aluno.', variant: 'destructive' });
       }
     });
   }

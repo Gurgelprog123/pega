@@ -26,6 +26,10 @@ export class GameIntegrationService {
     return this.http.post<StudentDto>(`${this.base}/students`, body);
   }
 
+  deleteStudent(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/students/${id}`);
+  }
+
   // ── Activities ────────────────────────────────────────────────────────────
 
   getActivities(): Observable<ActivityDto[]> {

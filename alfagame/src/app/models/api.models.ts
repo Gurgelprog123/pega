@@ -54,12 +54,21 @@ export interface ActivityDto {
 
 // ── Game ─────────────────────────────────────────────────────────────────────
 
+/** Resultado individual de uma palavra dentro de uma sessão */
+export interface PalavraResultado {
+  palavra: string;
+  acertou: boolean;
+  tempoMs: number;
+}
+
 export interface PlayGameRequest {
   studentId: number;
   activityId: number;
   acertos: number;
   erros: number;
   tempoMs: number;
+  /** Detalhamento por palavra para análise no relatório */
+  palavras?: PalavraResultado[];
 }
 
 export interface PlayGameResponse {
@@ -83,4 +92,6 @@ export interface GameResultDto {
   erros: number;
   tempoMs: number;
   timestamp: string;
+  /** JSON com [{palavra, acertou, tempoMs}, ...] — detalhamento por palavra */
+  detalhesPalavras?: string;
 }
