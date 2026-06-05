@@ -1,26 +1,31 @@
 <div style="display:flex;flex-direction:column;gap:1.75rem;align-items:center;text-align:center;">
 
-  <!-- Aviso: browser não suportado -->
+  <!-- Aviso browser não suportado -->
   @if (!suportado) {
     <div style="background:rgba(244,67,54,0.12);border:1.5px solid #f44336;border-radius:0.75rem;
-        padding:1rem 1.25rem;width:100%;text-align:left;display:flex;gap:0.75rem;align-items:flex-start;">
+        padding:1rem 1.25rem;width:100%;text-align:left;display:flex;gap:0.75rem;">
       <span style="font-size:1.3rem;flex-shrink:0;">⚠️</span>
       <div>
         <div style="font-weight:800;color:#f44336;margin-bottom:0.25rem;">Navegador não suportado</div>
-        <div style="font-size:0.85rem;color:#f44336;opacity:0.9;">
-          O reconhecimento de voz requer <strong>Google Chrome</strong> ou <strong>Safari</strong>.
-          Abra a página nesse navegador para usar este modo.
-        </div>
+        <div style="font-size:0.85rem;color:#f44336;opacity:0.9;">Use <strong>Google Chrome</strong> ou <strong>Safari</strong> para o modo de voz.</div>
       </div>
     </div>
   }
 
-  <!-- Imagem -->
-  <div class="animate-float" style="width:150px;height:150px;border-radius:28px;
-      background:#ffffff;border:none;
-      display:flex;align-items:center;justify-content:center;font-size:6rem;
+  <!-- Imagem da palavra (com fallback emoji) -->
+  <div class="animate-float" style="width:160px;height:160px;border-radius:28px;
+      background:#ffffff;overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
       box-shadow:0 8px 40px rgba(255,255,255,0.12),0 2px 8px rgba(0,0,0,0.8);">
-    {{ palavraAtual.imagem }}
+    <img [src]="palavraAtual.imagem" [alt]="palavraAtual.completa"
+      style="width:100%;height:100%;object-fit:cover;"
+      [hidden]="imgError"
+      (error)="imgError = true">
+    <div style="width:100%;height:100%;align-items:center;
+        justify-content:center;font-size:5.5rem;"
+      [style.display]="imgError ? 'flex' : 'none'">
+      {{ palavraAtual.emoji }}
+    </div>
   </div>
 
   <!-- Instrução -->
@@ -34,12 +39,12 @@
   <!-- Botão mic -->
   <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
     @if (!gravando) {
-      <button (click)="iniciarGravacao()" [disabled]="!suportado || processando || feedback !== null"
+      <button (click)="iniciarGravacao()"
+        [disabled]="!suportado || processando || feedback !== null"
         style="width:5rem;height:5rem;border-radius:9999px;font-size:1.8rem;cursor:pointer;
                background:#ffffff;color:#121212;border:none;
                box-shadow:0 4px 20px rgba(255,255,255,0.2);transition:all 0.2s;"
-        [style.opacity]="(!suportado || processando || feedback !== null) ? '0.4' : '1'"
-        [style.cursor]="(!suportado || processando || feedback !== null) ? 'not-allowed' : 'pointer'">
+        [style.opacity]="(!suportado || processando || feedback !== null) ? '0.4' : '1'">
         🎤
       </button>
     } @else {
@@ -58,12 +63,12 @@
     }
     @if (processando) {
       <p style="color:#888;font-size:0.875rem;font-weight:600;animation:pulse 1s infinite;margin:0;">
-        🔍 Analisando sua resposta...
+        🔍 Analisando...
       </p>
     }
   </div>
 
-  <!-- Feedback -->
+  <!-- Feedback da resposta -->
   @if (feedback) {
     <div class="animate-pop-in" style="display:flex;align-items:center;gap:0.75rem;
         padding:0.9rem 1.1rem;border-radius:0.75rem;font-weight:700;width:100%;text-align:left;"
@@ -77,4 +82,44 @@
       </div>
     </div>
   }
+
+  <!-- ── Gravações da sessão (estilo áudio do WhatsApp) ── -->
+  @if (gravacoes.length > 0) {
+    <div style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+        border-radius:1rem;padding:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+
+      <div style="font-size:0.78rem;font-weight:700;color:#888;text-transform:uppercase;
+          letter-spacing:0.06em;margin-bottom:0.25rem;">
+        🎙️ Gravações desta sessão
+      </div>
+
+      @for (g of gravacoes; track g.palavra + $index) {
+        <div style="display:flex;align-items:center;gap:0.75rem;
+            background:rgba(255,255,255,0.07);border-radius:0.75rem;padding:0.6rem 0.85rem;">
+
+          <!-- Indicador acerto/erro -->
+          <span style="font-size:1rem;flex-shrink:0;">
+            {{ g.acertou === true ? '✅' : g.acertou === false ? '❌' : '⏳' }}
+          </span>
+
+          <!-- Nome da palavra -->
+          <span class="font-display"
+            style="font-size:1rem;font-weight:700;min-width:52px;text-align:left;"
+            [style.color]="g.acertou === true ? '#4caf50' : g.acertou === false ? '#f44336' : '#aaa'">
+            {{ g.palavra.toUpperCase() }}
+          </span>
+
+          <!-- Player de áudio -->
+          <audio [src]="g.url" controls
+            style="flex:1;height:32px;min-width:0;accent-color:#ffffff;">
+          </audio>
+        </div>
+      }
+
+      <p style="font-size:0.75rem;color:#555;margin:0;text-align:center;">
+        As gravações são apagadas ao sair desta atividade.
+      </p>
+    </div>
+  }
+
 </div>

@@ -34,6 +34,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
 
   gravando    = false;
   processando = false;
+  imgError    = false;
   feedback: { tipo: 'correto' | 'incorreto'; mensagem: string } | null = null;
   gravacoes: Gravacao[] = [];
 
@@ -58,6 +59,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       this.feedback    = null;
       this.gravando    = false;
       this.processando = false;
+      this.imgError    = false;
       this.pararTudo();
     }
   }
