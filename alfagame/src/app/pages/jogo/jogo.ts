@@ -4,16 +4,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '../../services/toast';
 import { GameIntegrationService } from '../../services/game-integration.service';
 import { RewardService } from '../../services/reward.service';
-import { ActivityDto, ActivityType, PlayGameResponse } from '../../models/api.models';
+import { ActivityDto, ActivityType, PalavraResultado, PlayGameResponse } from '../../models/api.models';
 import { JogoCompletarComponent } from '../../components/jogo-completar/jogo-completar';
 import { JogoMultiplaEscolhaComponent } from '../../components/jogo-multipla-escolha/jogo-multipla-escolha';
 import { JogoVozComponent } from '../../components/jogo-voz/jogo-voz';
 
 export interface PalavraCompletar {
-  completa: string; incompleta: string; silaba: string; imagem: string;
+  completa: string; incompleta: string; silaba: string; imagem: string; emoji: string;
 }
 export interface PalavraMultipla extends PalavraCompletar { opcoes: string[]; }
-export interface PalavraVoz { completa: string; imagem: string; }
+export interface PalavraVoz { completa: string; imagem: string; emoji: string; }
 
 const ALL_SILABAS = ['LA','ME','SA','TO','RA','TE','LO','NE','BA','GO'];
 
@@ -140,6 +140,9 @@ export class JogoComponent implements OnInit {
   enviandoResultado = signal(false);
   resultadoJADE     = signal<PlayGameResponse | null>(null);
 
+  /** Acumula resultado por palavra para enviar ao backend e exibir no relatório */
+  private palavrasResultados: PalavraResultado[] = [];
+
   // Lista de atividades carregada do banco — usada para resolver o activityId correto
   private atividades: ActivityDto[] = [];
 
@@ -153,22 +156,27 @@ export class JogoComponent implements OnInit {
   get pontos() { return this.rewardSvc.score(); }
 
   palavrasCompletar: PalavraCompletar[] = [
-    { completa: 'bola', incompleta: 'BO__', silaba: 'LA', imagem: '🎾' },
-    { completa: 'nome', incompleta: 'NO__', silaba: 'ME', imagem: '📝' },
-    { completa: 'casa', incompleta: 'CA__', silaba: 'SA', imagem: '🏠' },
-    { completa: 'gato', incompleta: 'GA__', silaba: 'TO', imagem: '🐱' },
+    { completa: 'bola', incompleta: 'BO__', silaba: 'LA', imagem: '/images/jogos/bola.png', emoji: '⚽' },
+    { completa: 'casa', incompleta: 'CA__', silaba: 'SA', imagem: '/images/jogos/casa.png', emoji: '🏠' },
+    { completa: 'gato', incompleta: 'GA__', silaba: 'TO', imagem: '/images/jogos/gato.png', emoji: '🐱' },
+    { completa: 'pato', incompleta: 'PA__', silaba: 'TO', imagem: '/images/jogos/pato.png', emoji: '🐥' },
+    { completa: 'sapo', incompleta: 'SA__', silaba: 'PO', imagem: '/images/jogos/sapo.png', emoji: '🐸' },
+    { completa: 'bolo', incompleta: 'BO__', silaba: 'LO', imagem: '/images/jogos/bolo.png', emoji: '🎂' },
   ];
 
   palavrasVoz: PalavraVoz[] = [
-    { completa: 'bola', imagem: '🎾' },
-    { completa: 'nome', imagem: '📝' },
-    { completa: 'casa', imagem: '🏠' },
-    { completa: 'gato', imagem: '🐱' },
+    { completa: 'bola', imagem: '/images/jogos/bola.png', emoji: '⚽' },
+    { completa: 'casa', imagem: '/images/jogos/casa.png', emoji: '🏠' },
+    { completa: 'gato', imagem: '/images/jogos/gato.png', emoji: '🐱' },
+    { completa: 'pato', imagem: '/images/jogos/pato.png', emoji: '🐥' },
+    { completa: 'sapo', imagem: '/images/jogos/sapo.png', emoji: '🐸' },
+    { completa: 'bolo', imagem: '/images/jogos/bolo.png', emoji: '🎂' },
   ];
 
-  get palavrasMultipla(): PalavraMultipla[] {
-    return this.palavrasCompletar.map(p => ({ ...p, opcoes: gerarOpcoes(p.silaba) }));
-  }
+  // Opções geradas uma única vez e fixadas — getter regeneraria a cada change detection
+  readonly palavrasMultipla: PalavraMultipla[] = this.palavrasCompletar.map(
+    p => ({ ...p, opcoes: gerarOpcoes(p.silaba) })
+  );
 
   get total(): number {
     return this.tipoJogo === 'voz' ? this.palavrasVoz.length : this.palavrasCompletar.length;
@@ -226,6 +234,11 @@ export class JogoComponent implements OnInit {
     // pontuação já gerenciada pelo RewardService via registrarAcerto/registrarErro nos componentes
   }
 
+  /** Recebe o resultado de cada palavra individual dos componentes filhos */
+  onPalavraResultado(resultado: PalavraResultado) {
+    this.palavrasResultados.push(resultado);
+  }
+
   finalizarJogo() {
     this.mostrarResultado.set(true);
     const student = this.rewardSvc.student();
@@ -238,6 +251,7 @@ export class JogoComponent implements OnInit {
       acertos:    this.rewardSvc.acertos(),
       erros:      this.rewardSvc.erros(),
       tempoMs:    this.rewardSvc.getTempoMs(),
+      palavras:   this.palavrasResultados,
     }).subscribe({
       next: res => {
         this.resultadoJADE.set(res);

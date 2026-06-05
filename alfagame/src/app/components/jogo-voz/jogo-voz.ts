@@ -170,7 +170,8 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   }
 
   pararGravacao() {
-    this.sessaoId++; // invalida a sessão atual
+    // NÃO incrementa sessaoId — apenas para a gravação,
+    // o onresult ainda deve processar o áudio capturado
     if (this.recognition) {
       try { this.recognition.stop(); } catch {}
     }
