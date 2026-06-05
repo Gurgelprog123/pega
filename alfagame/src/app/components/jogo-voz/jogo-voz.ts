@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, NgZone, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudioService } from '../../services/audio.service';
 import { RewardService } from '../../services/reward.service';
@@ -30,6 +30,8 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   audio     = inject(AudioService);
   rewardSvc = inject(RewardService);
   toast     = inject(ToastService);
+  // NgZone necessário porque SpeechRecognition roda fora da zona Angular
+  private ngZone = inject(NgZone);
 
   gravando    = false;
   processando = false;
@@ -41,8 +43,6 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   private audioChunks: Blob[] = [];
   private micStream: MediaStream | null = null;
   private tempoInicioPalavraMs = Date.now();
-
-  /** ID incremental para ignorar callbacks de sessões antigas */
   private sessaoId = 0;
 
   get palavraAtual() { return this.palavras[this.indiceAtual]; }
@@ -53,11 +53,10 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['indiceAtual'] && !changes['indiceAtual'].firstChange) {
-      // Nova palavra: limpa todo o estado e invalida sessão anterior
       this.sessaoId++;
       this.tempoInicioPalavraMs = Date.now();
-      this.feedback = null;
-      this.gravando = false;
+      this.feedback    = null;
+      this.gravando    = false;
       this.processando = false;
       this.limparRecognition();
     }
@@ -79,15 +78,13 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    // Incrementa o ID de sessão: callbacks com ID antigo serão ignorados
     const minhaSessao = ++this.sessaoId;
-
-    this.gravando = true;
-    this.feedback = null;
+    this.gravando    = true;
+    this.feedback    = null;
     this.tempoInicioPalavraMs = Date.now();
     this.audioChunks = [];
 
-    // ── MediaRecorder (gravação para playback) ────────────────────────────
+    // ── MediaRecorder (gravação para playback) ──────────────────────────
     try {
       this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(this.micStream);
@@ -95,39 +92,36 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
         if (e.data.size > 0) this.audioChunks.push(e.data);
       };
       this.mediaRecorder.onstop = () => {
-        // Ignora se sessão mudou
-        if (minhaSessao !== this.sessaoId && this.sessaoId !== minhaSessao) return;
+        if (minhaSessao !== this.sessaoId) return;
         if (this.audioChunks.length > 0) {
           const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const url  = URL.createObjectURL(blob);
-          const palavraAtualCompleta = this.palavras[this.indiceAtual]?.completa ?? '';
-          const idx = this.gravacoes.findIndex(g => g.palavra === palavraAtualCompleta && g.acertou === null);
-          if (idx !== -1) {
-            this.gravacoes[idx].url = url;
-          } else {
-            this.gravacoes.push({ palavra: palavraAtualCompleta, url, acertou: null });
-          }
+          const nome = this.palavras[this.indiceAtual]?.completa ?? '';
+          const idx  = this.gravacoes.findIndex(g => g.palavra === nome && g.acertou === null);
+          if (idx !== -1) this.gravacoes[idx].url = url;
+          else            this.gravacoes.push({ palavra: nome, url, acertou: null });
         }
         this.micStream?.getTracks().forEach(t => t.stop());
         this.micStream = null;
       };
       this.mediaRecorder.start();
     } catch {
-      // Sem permissão — recognition continua normalmente
+      // sem permissão de mic — só o reconhecimento continua
     }
 
-    // ── SpeechRecognition (reconhecimento) ────────────────────────────────
+    // ── SpeechRecognition ───────────────────────────────────────────────
     this.limparRecognition();
     this.recognition = new SR();
-    this.recognition.lang = 'pt-BR';
-    this.recognition.interimResults = false;
+    this.recognition.lang            = 'pt-BR';
+    this.recognition.interimResults  = false;
     this.recognition.maxAlternatives = 5;
-    this.recognition.continuous = false;
+    this.recognition.continuous      = false;
 
+    // IMPORTANTE: SpeechRecognition roda fora da zona Angular.
+    // Tudo que muda estado ou emite eventos precisa estar dentro de ngZone.run().
     this.recognition.onresult = (event: any) => {
-      if (minhaSessao !== this.sessaoId) return; // sessão desatualizada
-      this.gravando = false;
-      this.processando = true;
+      if (minhaSessao !== this.sessaoId) return;
+
       this.pararMediaRecorderInterno();
 
       const alternativas: string[] = [];
@@ -138,31 +132,40 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
       const acertou = alternativas.some(t => t === alvo || t.includes(alvo));
       const tempoMs = Date.now() - this.tempoInicioPalavraMs;
 
-      setTimeout(() => {
-        if (minhaSessao !== this.sessaoId) return; // sessão desatualizada
-        this.processarResultado(acertou, alternativas[0] ?? '', tempoMs);
-      }, 300);
+      // Entra na zona Angular para que mudanças de estado sejam detectadas
+      this.ngZone.run(() => {
+        if (minhaSessao !== this.sessaoId) return;
+        this.gravando    = false;
+        this.processando = true;
+        setTimeout(() => {
+          if (minhaSessao !== this.sessaoId) return;
+          this.processarResultado(acertou, alternativas[0] ?? '', tempoMs);
+        }, 300);
+      });
     };
 
     this.recognition.onerror = (event: any) => {
       if (minhaSessao !== this.sessaoId) return;
-      this.gravando    = false;
-      this.processando = false;
       this.pararMediaRecorderInterno();
-
       const msgs: Record<string, string> = {
         'no-speech':           '🔇 Nenhuma fala detectada. Fale mais alto.',
         'not-allowed':         '🎙️ Microfone bloqueado. Permita nas configurações.',
         'service-not-allowed': '🎙️ Microfone bloqueado. Permita nas configurações.',
         'network':             '🌐 Sem conexão. O reconhecimento requer internet.',
       };
-      this.toast.show({ title: 'Erro ao reconhecer', description: msgs[event.error] ?? 'Tente novamente.', variant: 'destructive' });
+      this.ngZone.run(() => {
+        this.gravando    = false;
+        this.processando = false;
+        this.toast.show({ title: 'Erro ao reconhecer', description: msgs[event.error] ?? 'Tente novamente.', variant: 'destructive' });
+      });
     };
 
     this.recognition.onend = () => {
-      if (minhaSessao !== this.sessaoId) return; // ignora onend de sessão anterior
-      if (this.gravando) this.gravando = false;
+      if (minhaSessao !== this.sessaoId) return;
       this.pararMediaRecorderInterno();
+      this.ngZone.run(() => {
+        if (this.gravando) this.gravando = false;
+      });
     };
 
     this.recognition.start();
@@ -170,8 +173,6 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   }
 
   pararGravacao() {
-    // NÃO incrementa sessaoId — apenas para a gravação,
-    // o onresult ainda deve processar o áudio capturado
     if (this.recognition) {
       try { this.recognition.stop(); } catch {}
     }
@@ -200,7 +201,6 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
 
     const palavraAtualCompleta = this.palavraAtual.completa;
 
-    // Marca resultado na gravação
     const idx = this.gravacoes.findIndex(g => g.palavra === palavraAtualCompleta && g.acertou === null);
     if (idx !== -1) this.gravacoes[idx].acertou = acertou;
 
@@ -216,6 +216,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
           ? `Você disse "${transcricao}" — perfeito! 🎉`
           : `"${palavraAtualCompleta}" — correto! 🎉`
       };
+      // Avança para a próxima palavra após 1.8s
       setTimeout(() => {
         this.feedback = null;
         if (this.indiceAtual < this.palavras.length - 1) {
