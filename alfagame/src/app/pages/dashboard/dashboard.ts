@@ -27,6 +27,8 @@ export class DashboardComponent implements OnInit {
   students        = signal<StudentDto[]>(this.loadCachedStudents());
   loadingStudents = signal(false);
   syncError       = signal(false);
+  syncAcordando   = signal(false);  // true enquanto aguarda retry após falha
+  private syncTentativa = 0;
 
   totalScore = computed(() => this.students().reduce((acc, s) => acc + s.scoreTotal, 0));
 
@@ -49,18 +51,32 @@ export class DashboardComponent implements OnInit {
     const userId = this.authSvc.userId();
     if (!userId) return;
 
+    this.syncTentativa++;
     this.loadingStudents.set(true);
     this.syncError.set(false);
+    this.syncAcordando.set(false);
 
     this.gameSvc.getStudentsByUser(userId).subscribe({
       next: list => {
         this.students.set(list);
         this.saveStudentsCache(list);
         this.loadingStudents.set(false);
+        this.syncTentativa = 0;
       },
       error: () => {
         this.loadingStudents.set(false);
-        this.syncError.set(true);
+        if (this.syncTentativa === 1) {
+          // Primeira falha: servidor provavelmente dormindo — tenta de novo em 35s
+          this.syncAcordando.set(true);
+          setTimeout(() => {
+            this.syncAcordando.set(false);
+            this.syncStudents();
+          }, 35000);
+        } else {
+          // Segunda falha: mostra erro real
+          this.syncError.set(true);
+          this.syncTentativa = 0;
+        }
       }
     });
   }
