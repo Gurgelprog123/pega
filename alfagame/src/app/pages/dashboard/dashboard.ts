@@ -30,11 +30,6 @@ export class DashboardComponent implements OnInit {
 
   totalScore = computed(() => this.students().reduce((acc, s) => acc + s.scoreTotal, 0));
 
-  // Modal
-  showModal           = signal(false);
-  tipoJogoSelecionado = signal('completar');
-  selectedStudent     = signal<StudentDto | null>(null);
-
   // Form de aluno
   novoNome         = '';
   criando          = signal(false);
@@ -64,7 +59,6 @@ export class DashboardComponent implements OnInit {
         this.loadingStudents.set(false);
       },
       error: () => {
-        // Mantém cache local — não perde dados visíveis
         this.loadingStudents.set(false);
         this.syncError.set(true);
       }
@@ -75,33 +69,14 @@ export class DashboardComponent implements OnInit {
     return this.authSvc.user()?.nome ?? 'Usuário';
   }
 
+  /** Cards de atividade no topo — navega direto sem modal */
   jogar(tipo: string) {
-    this.tipoJogoSelecionado.set(tipo);
-    this.selectedStudent.set(null);
-    this.showModal.set(true);
-  }
-
-  jogarComAluno(aluno: StudentDto) {
-    // Botão no card do aluno: escolhe atividade no modal antes de ir pro jogo
-    this.selectedStudent.set(aluno);
-    this.tipoJogoSelecionado.set('completar');
-    this.showModal.set(true);
-  }
-
-  confirmarJogo() {
-    const student = this.selectedStudent();
-    if (!student) return;
-    this.rewardSvc.setStudent(student);
     this.rewardSvc.iniciarSessao();
-    this.showModal.set(false);
-    // Usa um pequeno delay para garantir que o modal feche antes de navegar
-    setTimeout(() => {
-      this.router.navigate(['/jogo'], { queryParams: { tipo: this.tipoJogoSelecionado() } });
-    }, 50);
+    this.router.navigate(['/jogo'], { queryParams: { tipo } });
   }
 
+  /** Botões ✏️🎯🎤 nos cards de aluno — define o aluno e navega direto */
   iniciarJogoDireto(aluno: StudentDto, tipo: string) {
-    // Navega direto sem modal (chamado pelos mini-botões de atividade no card)
     this.rewardSvc.setStudent(aluno);
     this.rewardSvc.iniciarSessao();
     this.router.navigate(['/jogo'], { queryParams: { tipo } });
