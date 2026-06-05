@@ -40,6 +40,7 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
   private recognition: any = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
+  private audioMimeType = 'audio/webm';
   private micStream: MediaStream | null = null;
   private tempoInicioPalavraMs = Date.now();
   private sessaoId = 0;
@@ -157,15 +158,22 @@ export class JogoVozComponent implements OnChanges, OnDestroy {
           stream.getTracks().forEach(t => t.stop());
           return;
         }
+        // Detecta o formato suportado (webm no Chrome, mp4 no Safari)
+        this.audioMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : 'audio/mp4';
+
         this.micStream    = stream;
-        this.mediaRecorder = new MediaRecorder(stream);
+        this.mediaRecorder = new MediaRecorder(stream, { mimeType: this.audioMimeType });
         this.mediaRecorder.ondataavailable = (e) => {
           if (e.data.size > 0) this.audioChunks.push(e.data);
         };
         this.mediaRecorder.onstop = () => {
           if (minhaSessao !== this.sessaoId) return;
           if (this.audioChunks.length > 0) {
-            const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+            const blob = new Blob(this.audioChunks, { type: this.audioMimeType });
             const url  = URL.createObjectURL(blob);
             const nome = this.palavras[this.indiceAtual]?.completa ?? '';
             const idx  = this.gravacoes.findIndex(g => g.palavra === nome && g.acertou === null);
