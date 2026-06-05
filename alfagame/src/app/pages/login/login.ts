@@ -75,8 +75,11 @@ export class LoginComponent {
       },
       error: err => {
         this.loading.set(false);
-        const msg = err.error?.message ?? 'Credenciais inválidas.';
-        this.toast.show({ title: 'Erro ao entrar', description: msg, variant: 'destructive' });
+        const isServerError = err.status === 0 || err.status >= 500;
+        const msg = isServerError
+          ? 'Servidor acordando, aguarde ~30s e tente novamente.'
+          : (err.error?.message ?? 'Credenciais inválidas.');
+        this.toast.show({ title: isServerError ? '⏳ Servidor iniciando' : 'Erro ao entrar', description: msg, variant: 'destructive' });
       }
     });
   }
@@ -95,8 +98,11 @@ export class LoginComponent {
       },
       error: err => {
         this.loading.set(false);
-        const msg = err.error?.message ?? 'Erro ao criar conta.';
-        this.toast.show({ title: 'Erro no cadastro', description: msg, variant: 'destructive' });
+        const isServerError = err.status === 0 || err.status >= 500;
+        const msg = isServerError
+          ? 'Servidor acordando, aguarde ~30s e tente novamente.'
+          : (err.error?.message ?? 'Erro ao criar conta.');
+        this.toast.show({ title: isServerError ? '⏳ Servidor iniciando' : 'Erro no cadastro', description: msg, variant: 'destructive' });
       }
     });
   }
