@@ -302,10 +302,8 @@ export class JogoComponent implements OnInit {
    * Os 3 modos de jogo (Completar, Escolher, Voz) usam as mesmas palavras.
    */
   private carregarPalavrasDeAtividade(atividades: ActivityDto[]) {
-    // Atividade mais recente = maior ID
-    const atividade = atividades
-      .filter(a => a.ativo)
-      .sort((a, b) => b.id - a.id)[0];
+    // Última atividade ativa retornada pelo servidor
+    const atividade = atividades.filter(a => a.ativo).at(-1);
 
     if (!atividade) return; // nenhuma atividade criada → mantém palavras padrão
 
@@ -323,8 +321,8 @@ export class JogoComponent implements OnInit {
   }
 
   /** Retorna o ID da atividade que foi carregada para este jogo. */
-  private resolverActivityId(): number {
-    return this.atividadeAtual?.id ?? (this.atividades[0]?.id ?? 1);
+  private resolverActivityId(): string {
+    return this.atividadeAtual?.id ?? this.atividades.find(a => a.ativo)?.id ?? '';
   }
 
   voltar() {

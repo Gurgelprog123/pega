@@ -28,7 +28,7 @@ export class RelatoriosComponent implements OnInit {
   loadingStudents  = signal(false);
 
   /** ID da sessão com detalhamento de palavras expandido (null = nenhuma) */
-  sessaoExpandida = signal<number | null>(null);
+  sessaoExpandida = signal<string | null>(null);
 
   // ── Stats derivados dos resultados reais ───────────────────────────────────
   dadosGerais = computed(() => {
@@ -130,7 +130,7 @@ export class RelatoriosComponent implements OnInit {
     });
   }
 
-  toggleSessao(id: number) {
+  toggleSessao(id: string) {
     this.sessaoExpandida.update(atual => atual === id ? null : id);
   }
 

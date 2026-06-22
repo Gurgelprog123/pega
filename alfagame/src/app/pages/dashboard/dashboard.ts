@@ -34,13 +34,13 @@ export class DashboardComponent implements OnInit {
 
   // Atividades
   atividades_lista  = signal<ActivityDto[]>([]);
-  excluindoAtivId   = signal<number | null>(null);
+  excluindoAtivId   = signal<string | null>(null);
 
   // Form de aluno
   novoNome         = '';
   criando          = signal(false);
   mostrarFormAluno = signal(false);
-  excluindoId      = signal<number | null>(null);
+  excluindoId      = signal<string | null>(null);
 
   atividades = [
     { tipo: 'completar',        icon: '✏️', titulo: 'Completar Sílabas',  descricao: 'Digite as letras que completam a palavra',  cor: 'hsl(217,91%,60%)' },
@@ -118,7 +118,7 @@ export class DashboardComponent implements OnInit {
     if (!userId) return;
 
     this.criando.set(true);
-    this.gameSvc.createStudent({ nome, userId }).subscribe({
+    this.gameSvc.createStudent({ nome, responsavelId: userId }).subscribe({
       next: aluno => {
         const updated = [...this.students(), aluno];
         this.students.set(updated);

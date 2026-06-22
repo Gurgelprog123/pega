@@ -17,7 +17,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   tipo: string;
-  userId: number;
+  userId: string;   // UUID
   nome: string;
   email: string;
   role: UserRole;
@@ -27,16 +27,16 @@ export interface AuthResponse {
 // ── Student ──────────────────────────────────────────────────────────────────
 
 export interface StudentDto {
-  id: number;
+  id: string;             // UUID
   nome: string;
   nivelAtual: number;
   scoreTotal: number;
-  userId: number;
+  responsavelId: string;  // UUID (professor/terapeuta responsável)
 }
 
 export interface CreateStudentRequest {
   nome: string;
-  userId: number;
+  responsavelId: string;  // UUID
 }
 
 // ── Activity ─────────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export interface CreateStudentRequest {
 export type ActivityType = 'LEITURA' | 'ESCRITA' | 'FONETICA' | 'VOCABULARIO' | 'SILABAS';
 
 export interface ActivityDto {
-  id: number;
+  id: string;   // UUID
   nome: string;
   tipo: ActivityType;
   descricao: string;
@@ -62,8 +62,8 @@ export interface PalavraResultado {
 }
 
 export interface PlayGameRequest {
-  studentId: number;
-  activityId: number;
+  studentId: string;    // UUID
+  activityId: string;   // UUID
   acertos: number;
   erros: number;
   tempoMs: number;
@@ -72,7 +72,7 @@ export interface PlayGameRequest {
 }
 
 export interface PlayGameResponse {
-  gameResultId: number;
+  gameResultId: string;  // UUID
   acertos: number;
   erros: number;
   tempoMs: number;
@@ -84,9 +84,9 @@ export interface PlayGameResponse {
 }
 
 export interface GameResultDto {
-  id: number;
-  studentId: number;
-  activityId: number;
+  id: string;           // UUID
+  studentId: string;    // UUID
+  activityId: string;   // UUID
   activityNome: string;
   acertos: number;
   erros: number;
